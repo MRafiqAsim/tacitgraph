@@ -78,10 +78,7 @@ def main():
             edges_raw = json.load(f)
 
         # Support both dict (keyed by edge_id) and list formats
-        if isinstance(edges_raw, dict):
-            edges = list(edges_raw.values())
-        else:
-            edges = edges_raw
+        edges = list(edges_raw.values()) if isinstance(edges_raw, dict) else edges_raw
 
         edge_types = Counter()
         for edge in edges:
@@ -233,7 +230,7 @@ def main():
         entities = catalog.get("entities", {})
         catalog_types = Counter()
         has_aliases = 0
-        for name, info in entities.items():
+        for info in entities.values():
             catalog_types[info.get("type", "UNKNOWN")] += 1
             if info.get("aliases"):
                 has_aliases += 1

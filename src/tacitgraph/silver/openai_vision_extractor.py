@@ -161,7 +161,7 @@ class OpenAIVisionExtractor:
         Returns:
             ExtractionResult with extracted text
         """
-        start_time = datetime.now()
+        datetime.now()
         result = ExtractionResult(
             attachment_id=attachment_id,
             filename=image_path.name,
@@ -373,7 +373,7 @@ class OpenAIVisionExtractor:
         content = [{"type": "text", "text": self.EXTRACTION_PROMPT}]
 
         for img in images:
-            image_data = img if is_base64 else img
+            image_data = img
             content.append(
                 {
                     "type": "image_url",

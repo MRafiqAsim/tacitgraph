@@ -112,7 +112,10 @@ packages = ["src/tacitgraph"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
-extend-exclude = ["synapse"]
+extend-exclude = [
+    "synapse",
+    "src/tacitgraph/pathrag",  # vendored third-party code (see THIRD_PARTY_LICENSE)
+]
 
 [tool.ruff.lint]
 select = [
@@ -128,9 +131,15 @@ select = [
 ignore = [
     "E501",     # line length is handled by the formatter
     "RUF001", "RUF002", "RUF003",  # unicode arrows/dashes in strings and comments are intentional
+    "RUF012",   # class-level constant tables are not mutated; ClassVar adds noise
+    "SIM102",   # nested ifs are kept where they read more clearly
+    "SIM105",   # explicit try/except/pass is preferred over contextlib.suppress
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# CLIs and the app load .env before importing modules that read settings at import time
+"src/tacitgraph/pipeline/*.py" = ["E402"]
+"src/tacitgraph/app.py" = ["E402"]
 "tests/**" = ["B011"]
 
 [tool.ruff.format]

@@ -73,11 +73,11 @@ async def _handle_entity_relation_summary(
     use_description = decode_tokens_by_tiktoken(
         tokens[:llm_max_tokens], model_name=tiktoken_model_name
     )
-    context_base = dict(
-        entity_name=entity_or_relation_name,
-        description_list=use_description.split(GRAPH_FIELD_SEP),
-        language=language,
-    )
+    context_base = {
+        "entity_name": entity_or_relation_name,
+        "description_list": use_description.split(GRAPH_FIELD_SEP),
+        "language": language,
+    }
     use_prompt = prompt_template.format(**context_base)
     logger.debug(f"Trigger summary: {entity_or_relation_name}")
     summary = await use_llm_func(use_prompt, max_tokens=summary_max_tokens)
@@ -97,12 +97,12 @@ async def _handle_single_entity_extraction(
     entity_type = clean_str(record_attributes[2].upper())
     entity_description = clean_str(record_attributes[3])
     entity_source_id = chunk_key
-    return dict(
-        entity_name=entity_name,
-        entity_type=entity_type,
-        description=entity_description,
-        source_id=entity_source_id,
-    )
+    return {
+        "entity_name": entity_name,
+        "entity_type": entity_type,
+        "description": entity_description,
+        "source_id": entity_source_id,
+    }
 
 
 async def _handle_single_relationship_extraction(
@@ -119,14 +119,14 @@ async def _handle_single_relationship_extraction(
     edge_keywords = clean_str(record_attributes[4])
     edge_source_id = chunk_key
     weight = float(record_attributes[-1]) if is_float_regex(record_attributes[-1]) else 1.0
-    return dict(
-        src_id=source,
-        tgt_id=target,
-        weight=weight,
-        description=edge_description,
-        keywords=edge_keywords,
-        source_id=edge_source_id,
-    )
+    return {
+        "src_id": source,
+        "tgt_id": target,
+        "weight": weight,
+        "description": edge_description,
+        "keywords": edge_keywords,
+        "source_id": edge_source_id,
+    }
 
 
 async def _merge_nodes_then_upsert(
@@ -159,11 +159,11 @@ async def _merge_nodes_then_upsert(
         set([dp["source_id"] for dp in nodes_data] + already_source_ids)
     )
     description = await _handle_entity_relation_summary(entity_name, description, global_config)
-    node_data = dict(
-        entity_type=entity_type,
-        description=description,
-        source_id=source_id,
-    )
+    node_data = {
+        "entity_type": entity_type,
+        "description": description,
+        "source_id": source_id,
+    }
     await knowledge_graph_inst.upsert_node(
         entity_name,
         node_data=node_data,
@@ -221,20 +221,20 @@ async def _merge_edges_then_upsert(
     await knowledge_graph_inst.upsert_edge(
         src_id,
         tgt_id,
-        edge_data=dict(
-            weight=weight,
-            description=description,
-            keywords=keywords,
-            source_id=source_id,
-        ),
+        edge_data={
+            "weight": weight,
+            "description": description,
+            "keywords": keywords,
+            "source_id": source_id,
+        },
     )
 
-    edge_data = dict(
-        src_id=src_id,
-        tgt_id=tgt_id,
-        description=description,
-        keywords=keywords,
-    )
+    edge_data = {
+        "src_id": src_id,
+        "tgt_id": tgt_id,
+        "description": description,
+        "keywords": keywords,
+    }
 
     return edge_data
 
@@ -262,25 +262,25 @@ async def extract_entities(
     else:
         examples = "\n".join(PROMPTS["entity_extraction_examples"])
 
-    example_context_base = dict(
-        tuple_delimiter=PROMPTS["DEFAULT_TUPLE_DELIMITER"],
-        record_delimiter=PROMPTS["DEFAULT_RECORD_DELIMITER"],
-        completion_delimiter=PROMPTS["DEFAULT_COMPLETION_DELIMITER"],
-        entity_types=",".join(entity_types),
-        language=language,
-    )
+    example_context_base = {
+        "tuple_delimiter": PROMPTS["DEFAULT_TUPLE_DELIMITER"],
+        "record_delimiter": PROMPTS["DEFAULT_RECORD_DELIMITER"],
+        "completion_delimiter": PROMPTS["DEFAULT_COMPLETION_DELIMITER"],
+        "entity_types": ",".join(entity_types),
+        "language": language,
+    }
 
     examples = examples.format(**example_context_base)
 
     entity_extract_prompt = PROMPTS["entity_extraction"]
-    context_base = dict(
-        tuple_delimiter=PROMPTS["DEFAULT_TUPLE_DELIMITER"],
-        record_delimiter=PROMPTS["DEFAULT_RECORD_DELIMITER"],
-        completion_delimiter=PROMPTS["DEFAULT_COMPLETION_DELIMITER"],
-        entity_types=",".join(entity_types),
-        examples=examples,
-        language=language,
-    )
+    context_base = {
+        "tuple_delimiter": PROMPTS["DEFAULT_TUPLE_DELIMITER"],
+        "record_delimiter": PROMPTS["DEFAULT_RECORD_DELIMITER"],
+        "completion_delimiter": PROMPTS["DEFAULT_COMPLETION_DELIMITER"],
+        "entity_types": ",".join(entity_types),
+        "examples": examples,
+        "language": language,
+    }
 
     continue_prompt = PROMPTS["entiti_continue_extraction"]
     if_loop_prompt = PROMPTS["entiti_if_loop_extraction"]
@@ -608,7 +608,7 @@ async def _build_query_context(
                 logger.warn("No high level context found. Switching to local mode.")
                 query_param.mode = "local"
     if query_param.mode == "hybrid":
-        entities_context, relations_context, text_units_context = combine_contexts(
+        _entities_context, _relations_context, text_units_context = combine_contexts(
             [hl_entities_context, hl_relations_context],
             [ll_entities_context, ll_relations_context],
             [hl_text_units_context, ll_text_units_context],
@@ -655,7 +655,7 @@ async def _get_node_data(
     node_datas = await asyncio.gather(
         *[knowledge_graph_inst.get_node(r["entity_name"]) for r in results]
     )
-    if not all([n is not None for n in node_datas]):
+    if not all(n is not None for n in node_datas):
         logger.warning("Some nodes are missing, maybe the storage is damaged")
 
     node_degrees = await asyncio.gather(
@@ -663,7 +663,7 @@ async def _get_node_data(
     )
     node_datas = [
         {**n, "entity_name": k["entity_name"], "rank": d}
-        for k, n, d in zip(results, node_datas, node_degrees)
+        for k, n, d in zip(results, node_datas, node_degrees, strict=False)
         if n is not None
     ]
     use_text_units = await _find_most_related_text_unit_from_entities(
@@ -729,12 +729,12 @@ async def _find_most_related_text_unit_from_entities(
 
     all_one_hop_text_units_lookup = {
         k: set(split_string_by_multi_markers(v["source_id"], [GRAPH_FIELD_SEP]))
-        for k, v in zip(all_one_hop_nodes, all_one_hop_nodes_data)
+        for k, v in zip(all_one_hop_nodes, all_one_hop_nodes_data, strict=False)
         if v is not None and "source_id" in v
     }
 
     all_text_units_lookup = {}
-    for index, (this_text_units, this_edges) in enumerate(zip(text_units, edges)):
+    for index, (this_text_units, this_edges) in enumerate(zip(text_units, edges, strict=False)):
         for c_id in this_text_units:
             if c_id not in all_text_units_lookup:
                 all_text_units_lookup[c_id] = {
@@ -789,14 +789,14 @@ async def _get_edge_data(
         *[knowledge_graph_inst.get_edge(r["src_id"], r["tgt_id"]) for r in results]
     )
 
-    if not all([n is not None for n in edge_datas]):
+    if not all(n is not None for n in edge_datas):
         logger.warning("Some edges are missing, maybe the storage is damaged")
     edge_degree = await asyncio.gather(
         *[knowledge_graph_inst.edge_degree(r["src_id"], r["tgt_id"]) for r in results]
     )
     edge_datas = [
         {"src_id": k["src_id"], "tgt_id": k["tgt_id"], "rank": d, **v}
-        for k, v, d in zip(results, edge_datas, edge_degree)
+        for k, v, d in zip(results, edge_datas, edge_degree, strict=False)
         if v is not None
     ]
     edge_datas = sorted(edge_datas, key=lambda x: (x["rank"], x["weight"]), reverse=True)
@@ -878,7 +878,7 @@ async def _find_most_related_entities_from_relationships(
     )
     node_datas = [
         {**n, "entity_name": k, "rank": d}
-        for k, n, d in zip(entity_names, node_datas, node_degrees)
+        for k, n, d in zip(entity_names, node_datas, node_degrees, strict=False)
     ]
 
     node_datas = truncate_list_by_token_size(
@@ -954,6 +954,7 @@ def combine_contexts(entities, relationships, sources):
 
 
 import networkx as nx
+import itertools
 
 
 async def find_paths_and_edges_with_stats(graph, target_nodes):
@@ -970,7 +971,7 @@ async def find_paths_and_edges_with_stats(graph, target_nodes):
             return
         if current == target:
             result[(path[0], target)]["paths"].append(list(path))
-            for u, v in zip(path[:-1], path[1:]):
+            for u, v in itertools.pairwise(path):
                 result[(path[0], target)]["edges"].add(tuple(sorted((u, v))))
             if depth == 1:
                 path_stats["1-hop"] += 1
@@ -985,7 +986,7 @@ async def find_paths_and_edges_with_stats(graph, target_nodes):
         neighbors = graph.neighbors(current)
         for neighbor in neighbors:
             if neighbor not in path:
-                await dfs(neighbor, target, path + [neighbor], depth + 1)
+                await dfs(neighbor, target, [*path, neighbor], depth + 1)
 
     for node1 in target_nodes:
         for node2 in target_nodes:
@@ -1050,7 +1051,7 @@ def bfs_weighted_paths(G, path, source, target, threshold, alpha):
             path_weight += edge_weights.get(edge, 0)
         path_weights.append(path_weight / (len(p) - 1))
 
-    combined = [(p, w) for p, w in zip(path, path_weights)]
+    combined = [(p, w) for p, w in zip(path, path_weights, strict=False)]
 
     return combined
 
@@ -1071,7 +1072,7 @@ async def _find_most_related_edges_from_entities3(
     source_nodes = [dp["entity_name"] for dp in node_datas]
     (
         result,
-        path_stats,
+        _path_stats,
         one_hop_paths,
         two_hop_paths,
         three_hop_paths,
@@ -1083,14 +1084,13 @@ async def _find_most_related_edges_from_entities3(
 
     for node1 in source_nodes:
         for node2 in source_nodes:
-            if node1 != node2:
-                if (node1, node2) in result:
-                    sub_G = nx.Graph()
-                    paths = result[(node1, node2)]["paths"]
-                    edges = result[(node1, node2)]["edges"]
-                    sub_G.add_edges_from(edges)
-                    results = bfs_weighted_paths(G, paths, node1, node2, threshold, alpha)
-                    all_results += results
+            if node1 != node2 and (node1, node2) in result:
+                sub_G = nx.Graph()
+                paths = result[(node1, node2)]["paths"]
+                edges = result[(node1, node2)]["edges"]
+                sub_G.add_edges_from(edges)
+                results = bfs_weighted_paths(G, paths, node1, node2, threshold, alpha)
+                all_results += results
     all_results = sorted(all_results, key=lambda x: x[1], reverse=True)
     seen = set()
     result_edge = []
@@ -1117,10 +1117,7 @@ async def _find_most_related_edges_from_entities3(
         total_edges = length
     sort_result = []
     if result_edge:
-        if len(result_edge) > total_edges:
-            sort_result = result_edge[0:total_edges]
-        else:
-            sort_result = result_edge
+        sort_result = result_edge[0:total_edges] if len(result_edge) > total_edges else result_edge
     final_result = []
     for edge, weight in sort_result:
         final_result.append(edge)

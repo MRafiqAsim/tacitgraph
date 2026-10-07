@@ -321,7 +321,7 @@ class PIIAnonymizationPipeline:
 
     def __init__(
         self,
-        languages: list[str] = None,
+        languages: list[str] | None = None,
         strategy: AnonymizationStrategy = AnonymizationStrategy.REPLACE,
         confidence_threshold: float = 0.5,
     ):
@@ -373,7 +373,7 @@ class PIIAnonymizationPipeline:
             languages = ["en"] * len(texts)
 
         results = []
-        for text, lang in zip(texts, languages):
+        for text, lang in zip(texts, languages, strict=False):
             result = self.process(text, lang)
             results.append(result)
 

@@ -278,7 +278,7 @@ class PSTExtractor:
                         f"No PST extraction library available. "
                         f"Install one of: pypff, libpff-python, or readpst. "
                         f"Error: {e}"
-                    )
+                    ) from e
 
         if self.stats["attachment_read_failures"] > 0:
             logger.warning(
@@ -676,10 +676,7 @@ class PSTExtractor:
                     content = b""
                     if hasattr(att, "read_buffer"):
                         try:
-                            if size > 0:
-                                content = att.read_buffer(size)
-                            else:
-                                content = att.read_buffer()
+                            content = att.read_buffer(size) if size > 0 else att.read_buffer()
                         except TypeError:
                             # read_buffer() might not accept args — try alternate
                             try:
@@ -744,7 +741,7 @@ class PSTExtractor:
                                 filename = entry.get_data_as_string()
                                 if filename:
                                     return filename
-                    except:
+                    except Exception:
                         continue
 
         except Exception as e:

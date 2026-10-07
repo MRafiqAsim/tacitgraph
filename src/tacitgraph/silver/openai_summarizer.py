@@ -73,8 +73,8 @@ class OpenAISummarizer:
 
             self.client = OpenAI(api_key=api_key)
             logger.info(f"OpenAI Summarizer initialized with model: {model}")
-        except ImportError:
-            raise ImportError("OpenAI package not installed. Run: pip install openai")
+        except ImportError as exc:
+            raise ImportError("OpenAI package not installed. Run: pip install openai") from exc
 
     def summarize(
         self, text: str, style: str = "concise", max_length: int | None = None

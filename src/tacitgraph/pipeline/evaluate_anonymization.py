@@ -80,7 +80,7 @@ class DetectorWrapper:
 
 
 def run_evaluation(
-    ground_truth_path: str, confidence_threshold: float = 0.5, output_path: str = None
+    ground_truth_path: str, confidence_threshold: float = 0.5, output_path: str | None = None
 ) -> dict:
     """
     Run the anonymization evaluation.

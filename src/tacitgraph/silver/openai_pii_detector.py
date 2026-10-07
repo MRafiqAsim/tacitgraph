@@ -77,8 +77,8 @@ class OpenAIPIIDetector:
                 self.model = model
                 self.client = OpenAI(api_key=api_key)
                 logger.info(f"OpenAI PII Detector initialized with model: {model}")
-        except ImportError:
-            raise ImportError("OpenAI package not installed. Run: pip install openai")
+        except ImportError as exc:
+            raise ImportError("OpenAI package not installed. Run: pip install openai") from exc
 
     def detect(self, text: str, language: str = "en") -> list[PIIEntity]:
         """
@@ -124,10 +124,7 @@ class OpenAIPIIDetector:
             result = json.loads(content)
 
             # Extract entities array from response
-            if isinstance(result, dict):
-                entities_data = result.get("entities", [])
-            else:
-                entities_data = result
+            entities_data = result.get("entities", []) if isinstance(result, dict) else result
 
             # Convert to PIIEntity objects
             entities = []
@@ -298,8 +295,8 @@ class OpenAIAnonymizer:
 
                 self.model = model
                 self.client = OpenAI(api_key=api_key)
-        except ImportError:
-            raise ImportError("OpenAI package not installed. Run: pip install openai")
+        except ImportError as exc:
+            raise ImportError("OpenAI package not installed. Run: pip install openai") from exc
 
     def anonymize(self, text: str, entities: list[PIIEntity], strategy: str = "replace") -> str:
         """

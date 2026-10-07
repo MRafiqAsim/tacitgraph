@@ -5,6 +5,7 @@ Detects the language of text content for proper NLP model selection.
 Supports English and Dutch as primary languages.
 """
 
+import importlib.util
 import logging
 from dataclasses import dataclass
 
@@ -221,23 +222,17 @@ class LanguageDetector:
 
     def _check_langdetect(self) -> bool:
         """Check if langdetect is available"""
-        try:
-            import langdetect
-
-            return True
-        except ImportError:
+        if importlib.util.find_spec("langdetect") is None:
             logger.debug("langdetect not available")
             return False
+        return True
 
     def _check_langid(self) -> bool:
         """Check if langid is available"""
-        try:
-            import langid
-
-            return True
-        except ImportError:
+        if importlib.util.find_spec("langid") is None:
             logger.debug("langid not available")
             return False
+        return True
 
     def detect(self, text: str) -> LanguageDetectionResult:
         """
@@ -430,10 +425,7 @@ class LanguageDetector:
             return False
 
         # Check if second language is significant
-        if result.all_languages[1][1] >= threshold:
-            return True
-
-        return False
+        return result.all_languages[1][1] >= threshold
 
 
 # Convenience function

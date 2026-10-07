@@ -402,7 +402,7 @@ class RAGASDatasetBuilder:
         """
         samples = []
 
-        for i, (q, a, c) in enumerate(zip(questions, answers, contexts)):
+        for i, (q, a, c) in enumerate(zip(questions, answers, contexts, strict=False)):
             gt = ground_truths[i] if ground_truths else None
             samples.append(
                 EvaluationSample(

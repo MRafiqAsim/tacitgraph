@@ -137,7 +137,7 @@ async def _run_ragas_scoring_async(all_results, args):
         "context_recall",
         "answer_correctness",
     ]
-    strategies_evaluated = sorted(set(r["strategy"] for r in all_results))
+    strategies_evaluated = sorted({r["strategy"] for r in all_results})
     ragas_scores = {}
 
     for strategy_name in strategies_evaluated:
@@ -183,7 +183,7 @@ async def _run_ragas_scoring_async(all_results, args):
     output = {
         "timestamp": datetime.now().isoformat(),
         "mode": getattr(args, "mode", "unknown"),
-        "num_questions": len(set(r["question"] for r in all_results)),
+        "num_questions": len({r["question"] for r in all_results}),
         "strategies_evaluated": strategies_evaluated,
         "ragas_scores": ragas_scores,
         "detailed_results": all_results,

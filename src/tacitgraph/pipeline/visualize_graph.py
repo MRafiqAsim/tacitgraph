@@ -85,7 +85,7 @@ def draw_schema(output_path: str):
     for src, tgt, label in edges:
         G.add_edge(src, tgt, label=label)
 
-    fig, ax = plt.subplots(1, 1, figsize=(16, 10))
+    _fig, ax = plt.subplots(1, 1, figsize=(16, 10))
     ax.set_title(
         "Knowledge Graph Schema — Node Types & Relationships",
         fontsize=14,
@@ -110,7 +110,7 @@ def draw_schema(output_path: str):
     nx.draw_networkx_nodes(G, pos, ax=ax, node_color=node_color_list, node_size=2500, alpha=0.9)
     nx.draw_networkx_labels(G, pos, ax=ax, font_size=9, font_weight="bold", font_color="white")
 
-    edge_labels = {(s, t): l for s, t, l in edges}
+    edge_labels = {(s, t): label for s, t, label in edges}
     nx.draw_networkx_edges(
         G,
         pos,
@@ -129,7 +129,7 @@ def draw_schema(output_path: str):
         ax=ax,
         font_size=7,
         font_color="#333333",
-        bbox=dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.7),
+        bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "alpha": 0.7},
     )
 
     # Legend
@@ -193,7 +193,7 @@ def draw_sample_graph(gold_path: str, output_path: str, sample_size: int = 80):
     for e in sampled_edges:
         G.add_edge(e["source_id"], e["target_id"], label=e.get("edge_type", ""))
 
-    fig, ax = plt.subplots(1, 1, figsize=(18, 12))
+    _fig, ax = plt.subplots(1, 1, figsize=(18, 12))
     ax.set_title(
         f"Knowledge Graph Sample — {len(sampled_nodes)} nodes, {len(sampled_edges)} edges\n(CHUNK and MENTIONED_IN edges hidden for clarity)",
         fontsize=12,

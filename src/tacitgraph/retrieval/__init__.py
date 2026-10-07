@@ -14,16 +14,13 @@ from .react_retriever import ReActResult, ReActRetriever, ReActStep
 from .retrieval_tools import RetrievalToolkit, Tool, ToolResult
 
 __all__ = [
-    # Tools
+    "HybridRetriever",
+    "ReActResult",
+    "ReActRetriever",
+    "ReActStep",
+    "RetrievalResult",
+    "RetrievalStrategy",
     "RetrievalToolkit",
     "Tool",
     "ToolResult",
-    # ReAct
-    "ReActRetriever",
-    "ReActResult",
-    "ReActStep",
-    # Hybrid
-    "HybridRetriever",
-    "RetrievalResult",
-    "RetrievalStrategy",
 ]

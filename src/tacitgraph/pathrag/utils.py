@@ -206,7 +206,7 @@ def list_of_list_to_csv(data: list[list[str]]) -> str:
 def csv_string_to_list(csv_string: str) -> list[list[str]]:
     output = io.StringIO(csv_string)
     reader = csv.reader(output)
-    return [row for row in reader]
+    return list(reader)
 
 
 def save_data_to_file(data, file_name):

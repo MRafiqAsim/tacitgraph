@@ -178,8 +178,8 @@ def main():
         print(f"  Average body length:          {sum(body_lengths) // len(body_lengths):,} chars")
         print(f"  Min body length:              {min(body_lengths):,} chars")
         print(f"  Max body length:              {max(body_lengths):,} chars")
-        print(f"  Emails > 10K chars:           {sum(1 for l in body_lengths if l > 10000)}")
-        print(f"  Emails > 20K chars:           {sum(1 for l in body_lengths if l > 20000)}")
+        print(f"  Emails > 10K chars:           {sum(1 for n in body_lengths if n > 10000)}")
+        print(f"  Emails > 20K chars:           {sum(1 for n in body_lengths if n > 20000)}")
 
     print("\n--- Threading Headers ---")
     print(f"  Has Message-ID:               {has_message_id}/{total_emails}")

@@ -3,3 +3,7 @@ Copyright 2026 Muhammad Rafiq
 
 This product includes software developed by Muhammad Rafiq
 (https://github.com/MRafiqAsim/tacitgraph).
+
+This product includes code adapted from PathRAG (https://github.com/BUPT-GAMMA/PathRAG)
+and LightRAG (https://github.com/HKUDS/LightRAG), both under the MIT License.
+See src/tacitgraph/pathrag/THIRD_PARTY_LICENSE.

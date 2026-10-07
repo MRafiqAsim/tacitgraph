@@ -6,6 +6,7 @@ Uses PathRAG's flow-based path pruning for query-time path finding.
 """
 
 import asyncio
+import itertools
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
@@ -107,7 +108,7 @@ class PathRAGRetriever:
                 )
 
             # Add entity-to-entity edges only
-            for edge_id, edge in graph.edges.items():
+            for _edge_id, edge in graph.edges.items():
                 if edge.edge_type in EXCLUDE_EDGE_TYPES:
                     continue
                 if edge.source_id in entity_ids and edge.target_id in entity_ids:
@@ -177,7 +178,7 @@ class PathRAGRetriever:
                 return
             if current == target:
                 result[pair_key]["paths"].append(list(path))
-                for u, v in zip(path[:-1], path[1:]):
+                for u, v in itertools.pairwise(path):
                     result[pair_key]["edges"].add(tuple(sorted((u, v))))
                 if depth == 1:
                     path_stats["1-hop"] += 1
@@ -200,7 +201,7 @@ class PathRAGRetriever:
             path_set = set(path)  # O(1) membership check
             for neighbor in _get_neighbors(current):
                 if neighbor not in path_set:
-                    dfs(neighbor, target, path + [neighbor], depth + 1, pair_key)
+                    dfs(neighbor, target, [*path, neighbor], depth + 1, pair_key)
                     # Re-check after recursion
                     if len(result[pair_key]["paths"]) >= MAX_PATHS_PER_PAIR:
                         return
@@ -290,7 +291,7 @@ class PathRAGRetriever:
                 path_weight += edge_weights.get(edge, 0)
             path_weights.append(path_weight / (len(p) - 1) if len(p) > 1 else 0)
 
-        return list(zip(paths, path_weights))
+        return list(zip(paths, path_weights, strict=False))
 
     def path_to_natural_language(self, path: list[str]) -> str:
         """
@@ -335,7 +336,9 @@ class PathRAGRetriever:
 
         return "".join(parts)
 
-    async def retrieve(self, entity_ids: list[str], max_paths: int = None) -> list[PathResult]:
+    async def retrieve(
+        self, entity_ids: list[str], max_paths: int | None = None
+    ) -> list[PathResult]:
         """
         Main retrieval method using PathRAG algorithms.
 
@@ -356,7 +359,7 @@ class PathRAGRetriever:
             return self._retrieve_single_entity(entity_ids[0], max_paths)
 
         # Step 1: Find all paths using DFS
-        result, path_stats, one_hop, two_hop, three_hop = await self.find_paths_between_entities(
+        result, path_stats, _one_hop, _two_hop, _three_hop = await self.find_paths_between_entities(
             entity_ids
         )
 

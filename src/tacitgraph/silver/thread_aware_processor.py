@@ -1182,7 +1182,7 @@ class ThreadAwareProcessor:
                 doc_id = doc_data.get("doc_id", doc_file.stem)
                 text = doc_data.get("text", "")
                 filename = doc_data.get("source_path", doc_data.get("filename", doc_file.name))
-                doc_type = doc_data.get("doc_type", "document")
+                doc_data.get("doc_type", "document")
 
                 if not text or not text.strip() or len(text.strip()) < 50:
                     continue
@@ -1207,7 +1207,7 @@ class ThreadAwareProcessor:
                 # Entity extraction + translation
                 extract_per_chunk = len(cleaned) > 6000
                 if not extract_per_chunk:
-                    kg_entity_dicts, kg_entities_raw, llm_text_english, detected_lang = (
+                    kg_entity_dicts, kg_entities_raw, llm_text_english, _detected_lang = (
                         self._extract_kg_entities(cleaned, language, chunk_id=doc_id)
                     )
                     text_english = llm_text_english if llm_text_english else cleaned
@@ -1227,7 +1227,7 @@ class ThreadAwareProcessor:
 
                     # Per-chunk extraction for large documents
                     if extract_per_chunk:
-                        chunk_entities, chunk_entities_raw, chunk_english, chunk_lang = (
+                        chunk_entities, chunk_entities_raw, chunk_english, _chunk_lang = (
                             self._extract_kg_entities(chunk_cleaned, language, chunk_id=chunk_id)
                         )
                         if not chunk_english:
@@ -1436,13 +1436,10 @@ class ThreadAwareProcessor:
                         chunk_rels = []
                     else:
                         prev_filter = self.stats.get("content_filter_blocks", 0)
-                        chunk_entities, chunk_entities_raw, chunk_llm_english, chunk_lang = (
+                        chunk_entities, chunk_entities_raw, chunk_llm_english, _chunk_lang = (
                             self._extract_kg_entities(chunk_cleaned, seg_lang, chunk_id=chunk_id)
                         )
-                        if chunk_llm_english:
-                            chunk_english = chunk_llm_english
-                        else:
-                            chunk_english = chunk_cleaned
+                        chunk_english = chunk_llm_english or chunk_cleaned
                         chunk_rels = self._extract_kg_relationships(
                             chunk_english, chunk_entities_raw, seg_lang, chunk_id=chunk_id
                         )
@@ -1588,16 +1585,15 @@ class ThreadAwareProcessor:
                 self.process_attachments
                 and self.attachment_processor
                 and email_meta.get("has_attachments")
-            ):
-                if email_record_id != "unknown":
-                    raw_contents = self.attachment_processor.get_email_attachment_content(
-                        email_record_id
-                    )
-                    for att_content in raw_contents:
-                        self.stats["attachments_processed"] += 1
-                        attachment_filenames.append(att_content.filename)
-                        email_attachment_contents.append(att_content)
-                        all_attachment_contents.append(att_content)
+            ) and email_record_id != "unknown":
+                raw_contents = self.attachment_processor.get_email_attachment_content(
+                    email_record_id
+                )
+                for att_content in raw_contents:
+                    self.stats["attachments_processed"] += 1
+                    attachment_filenames.append(att_content.filename)
+                    email_attachment_contents.append(att_content)
+                    all_attachment_contents.append(att_content)
 
             has_attachments = len(attachment_filenames) > 0 or email_meta.get(
                 "has_attachments", False
@@ -1752,9 +1748,8 @@ class ThreadAwareProcessor:
             logger.info("  Email body empty, processing attachments only")
 
         # Process attachments separately → attachment_chunks/ + attachment_summaries/
-        attachment_ids = []
         if attachment_contents:
-            att_chunks, attachment_ids = self._process_attachments_separately(
+            att_chunks, _attachment_ids = self._process_attachments_separately(
                 attachment_contents=attachment_contents,
                 thread_id=thread.conversation_id,
                 subject=thread.subject,
@@ -2334,10 +2329,7 @@ class ThreadAwareProcessor:
 
     def _save_individual_chunk(self, chunk: ThreadChunk) -> None:
         """Save chunk to Silver layer — routes to appropriate subdirectory by source_type."""
-        if chunk.source_type == "document":
-            subdir = "document_chunks"
-        else:
-            subdir = "email_chunks"
+        subdir = "document_chunks" if chunk.source_type == "document" else "email_chunks"
         chunk_file = self.silver_path / "not_personal" / subdir / f"{chunk.chunk_id}.json"
         chunk_file.parent.mkdir(parents=True, exist_ok=True)
         with open(chunk_file, "w", encoding="utf-8") as f:

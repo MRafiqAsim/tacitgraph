@@ -342,10 +342,7 @@ class BronzeLayerLoader:
         """
         docs_dir = self.bronze_path / "documents"
 
-        if doc_type:
-            search_path = docs_dir / doc_type
-        else:
-            search_path = docs_dir
+        search_path = docs_dir / doc_type if doc_type else docs_dir
 
         for json_file in search_path.rglob("*.json"):
             try:

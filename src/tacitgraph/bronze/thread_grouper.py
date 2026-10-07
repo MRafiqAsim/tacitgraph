@@ -52,10 +52,7 @@ class EmailThread:
         # Also add recipient emails/names as participants
         for recipient_list in [headers.get("recipients_to", []), headers.get("recipients_cc", [])]:
             for r in recipient_list:
-                if isinstance(r, dict):
-                    name = r.get("name", "") or r.get("email", "")
-                else:
-                    name = str(r)
+                name = r.get("name", "") or r.get("email", "") if isinstance(r, dict) else str(r)
                 if name and name not in self.participants:
                     self.participants.append(name)
 

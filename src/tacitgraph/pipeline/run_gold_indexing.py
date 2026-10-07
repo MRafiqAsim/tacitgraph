@@ -294,7 +294,7 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
             if current % 5000 == 0:
                 print(f"  Processed {current}/{total} entity pairs...")
 
-        paths = indexer.build_index(progress_callback=path_progress)
+        indexer.build_index(progress_callback=path_progress)
         indexer.save()
 
         path_stats = indexer.get_path_statistics()

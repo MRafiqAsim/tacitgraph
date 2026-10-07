@@ -333,7 +333,7 @@ class SemanticChunker:
                     else:
                         break
 
-                current_chunk = overlap_sentences + [sentence]
+                current_chunk = [*overlap_sentences, sentence]
                 current_tokens = overlap_tokens + sentence_tokens
                 current_start = char_pos - sum(len(s) + 1 for s in overlap_sentences)
 
@@ -449,7 +449,7 @@ class SemanticChunker:
             current_start = start_offset
             char_pos = 0
 
-            for i, part in enumerate(parts):
+            for _i, part in enumerate(parts):
                 part_tokens = self._count_tokens(part)
 
                 # Part alone is too big - recurse with next separator

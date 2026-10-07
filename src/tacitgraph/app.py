@@ -136,7 +136,7 @@ def compact_history(conv_state: list[dict[str, str]]) -> tuple[list[dict[str, st
     r = get_retriever()
     if not r.llm_client:
         summary_text = f"Conversation covered {len(older)} earlier exchanges."
-        return [{"_compaction_summary": summary_text}] + recent, True
+        return [{"_compaction_summary": summary_text}, *recent], True
 
     try:
         response = r.llm_client.chat.completions.create(
@@ -166,7 +166,7 @@ def compact_history(conv_state: list[dict[str, str]]) -> tuple[list[dict[str, st
         logger.warning(f"Compaction summary failed: {e}")
         summary_text = f"Conversation covered {len(older)} earlier exchanges."
 
-    new_state = [{"_compaction_summary": summary_text}] + recent
+    new_state = [{"_compaction_summary": summary_text}, *recent]
     summary_tokens = count_tokens(summary_text)
     logger.info(
         f"Compacted {len(older)} turns ({older_tokens} tokens) into summary "
@@ -240,14 +240,16 @@ def generate_examples() -> list[list[str]]:
             if orgs:
                 examples.append([f"What do the emails say about {orgs[0]['name']}?"])
 
-            _noise = lambda name: (
-                any(c.isdigit() for c in name[:3])
-                or "." in name
-                or ":" in name
-                or "@" in name
-                or len(name) < 4
-                or len(name) > 50
-            )
+            def _noise(name):
+                return (
+                    any(c.isdigit() for c in name[:3])
+                    or "." in name
+                    or ":" in name
+                    or "@" in name
+                    or len(name) < 4
+                    or len(name) > 50
+                )
+
             docs = sorted(
                 [
                     n
@@ -457,7 +459,6 @@ def format_sources(result: RetrievalResult) -> str:
 def format_metadata(
     result: RetrievalResult, rewritten_query: str = "", original_query: str = ""
 ) -> str:
-    grounded_str = "Yes" if result.is_grounded else "No"
     steps = result.metadata.get("steps", 0)
     total_tokens = result.metadata.get("total_tokens", 0)
 

@@ -83,10 +83,7 @@ def main():
         with open(edges_file) as f:
             edges_raw = json.load(f)
 
-        if isinstance(edges_raw, dict):
-            edges_data = list(edges_raw.values())
-        else:
-            edges_data = edges_raw
+        edges_data = list(edges_raw.values()) if isinstance(edges_raw, dict) else edges_raw
 
         # Filter to entity nodes (skip CHUNK, THREAD, EMAIL)
         skip_types = {"CHUNK", "THREAD", "EMAIL"}

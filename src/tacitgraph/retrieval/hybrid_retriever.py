@@ -734,7 +734,6 @@ class HybridRetriever:
 
         # No ReAct observations as extra context — answer generated from source chunks only.
         # Observations may contain LLM-generated summaries that could bias the answer.
-        extra_context = ""
 
         # Generate answer through the unified prompt
         answer = ""

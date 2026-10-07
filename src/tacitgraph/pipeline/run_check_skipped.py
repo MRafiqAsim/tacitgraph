@@ -26,10 +26,10 @@ def main():
     # Collect processed email IDs
     known = set()
     for f in glob.glob(f"{args.silver}/not_personal/email_chunks/*.json"):
-        d = json.load(open(f))
+        d = json.loads(Path(f).read_text(encoding="utf-8"))
         known.update(d.get("source_email_ids", []))
     for f in glob.glob(f"{args.silver}/personal/*.json"):
-        d = json.load(open(f))
+        d = json.loads(Path(f).read_text(encoding="utf-8"))
         for e in d.get("emails", []):
             known.add(e.get("record_id", ""))
 
@@ -39,7 +39,7 @@ def main():
     has_body_skipped = []
 
     for f in glob.glob(f"{args.bronze}/emails/**/*.json", recursive=True):
-        d = json.load(open(f))
+        d = json.loads(Path(f).read_text(encoding="utf-8"))
         rid = d.get("record_id", "")
         if rid in known:
             continue

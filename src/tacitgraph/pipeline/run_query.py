@@ -111,7 +111,7 @@ def run_interactive(retriever: HybridRetriever, strategy: RetrievalStrategy):
                 continue
 
             print(f"\nSearching with {current_strategy.value}...")
-            start_time = datetime.now()
+            datetime.now()
 
             result = retriever.retrieve(query, current_strategy)
 

@@ -306,7 +306,7 @@ class EmailSensitivityClassifier:
         """
         headers = email_data.get("email_headers", {})
         body = email_data.get("email_body_text", "")
-        meta = email_data.get("document_metadata", {})
+        email_data.get("document_metadata", {})
         attachments = email_data.get("attachments", [])
 
         # Check manual overrides first
@@ -537,7 +537,6 @@ class EmailSensitivityClassifier:
             ".xls",
             ".xlsx",  # data/reports
         }
-        sens_ext = {".pdf"}  # PDFs alone aren't sensitive, but combined with other signals
 
         for att in attachments:
             filename = att.get("filename", "").lower()
@@ -645,8 +644,8 @@ class LLMSensitivityClassifier:
 
                 self.model = model
                 self.client = OpenAI(api_key=api_key)
-        except ImportError:
-            raise ImportError("openai package not installed. Run: pip install openai")
+        except ImportError as exc:
+            raise ImportError("openai package not installed. Run: pip install openai") from exc
 
         # Load prompts
         from tacitgraph.prompt_loader import format_prompt, get_prompt

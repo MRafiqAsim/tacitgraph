@@ -35,7 +35,7 @@ DISCLAIMER_PATTERNS = [
 class DisclaimerRemover:
     """Remove legal disclaimers from email text"""
 
-    def __init__(self, custom_patterns: list[str] = None):
+    def __init__(self, custom_patterns: list[str] | None = None):
         """
         Initialize the disclaimer remover.
 

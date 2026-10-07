@@ -271,11 +271,10 @@ Examples:
         args.mode in ["llm", "hybrid"]
         or args.kg_strategy in ["llm", "hybrid"]
         or args.rel_strategy in ["llm", "hybrid"]
-    ):
-        if not api_key:
-            print("ERROR: LLM/hybrid mode requires API key.")
-            print("   Use --azure-key, --openai-key, or set AZURE_OPENAI_API_KEY env var")
-            sys.exit(1)
+    ) and not api_key:
+        print("ERROR: LLM/hybrid mode requires API key.")
+        print("   Use --azure-key, --openai-key, or set AZURE_OPENAI_API_KEY env var")
+        sys.exit(1)
 
     # Build or load Identity Registry
     identity_registry = None

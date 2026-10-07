@@ -134,7 +134,7 @@ def main():
 
     if args.workers <= 1:
         # Sequential
-        for i, cf in enumerate(chunks):
+        for _i, cf in enumerate(chunks):
             chunk_id, ne, nr, err = process_chunk(cf, api_key, endpoint, deployment)
             completed += 1
             total_e += ne

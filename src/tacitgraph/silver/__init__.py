@@ -67,42 +67,39 @@ def get_unified_processor():
 
 
 __all__ = [
-    # PII Detection
+    "AnonymizationResult",
+    "AnonymizedRecord",
+    "Anonymizer",
+    "AttachmentClassifier",
+    "Chunk",
+    "ClassificationResult",
+    "EmailSensitivityClassifier",
+    "EquivalenceClass",
+    "Identity",
+    "IdentityRegistry",
+    "KGEntity",
+    "KGEntityExtractor",
+    "LLMSensitivityClassifier",
+    "LanguageDetector",
     "PIIDetector",
     "PIIEntity",
     "PIIType",
-    # Anonymization
-    "Anonymizer",
-    "AnonymizationResult",
-    # Identity Registry
-    "IdentityRegistry",
-    "Identity",
-    # Silver Layer Processing
-    "SilverLayerProcessor",
-    # KG Extraction
-    "KGEntityExtractor",
-    "KGEntity",
-    "SpaCyKGExtractor",
-    "create_kg_extractor",
-    "RelationshipExtractor",
-    "create_relationship_extractor",
-    # Language Detection & Chunking
-    "LanguageDetector",
-    "SemanticChunker",
-    "Chunk",
-    # Privacy Metrics
     "PrivacyMetricsCalculator",
     "PrivacyMetricsResult",
-    "TextPrivacyAnalyzer",
-    "AnonymizedRecord",
     "QuasiIdentifier",
+    "RelationshipExtractor",
+    "SemanticChunker",
     "SensitiveAttribute",
-    "EquivalenceClass",
-    "calculate_privacy_metrics",
+    "SensitivityResult",
+    "SilverLayerProcessor",
+    "SpaCyKGExtractor",
+    "TextPrivacyAnalyzer",
     "analyze_text_privacy",
-    # OpenAI Components (lazy loaded)
-    "get_openai_detector",
+    "calculate_privacy_metrics",
+    "create_kg_extractor",
+    "create_relationship_extractor",
     "get_openai_anonymizer",
+    "get_openai_detector",
     "get_openai_summarizer",
     "get_unified_processor",
 ]

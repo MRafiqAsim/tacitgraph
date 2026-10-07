@@ -790,7 +790,7 @@ class RetrievalToolkit:
 
             # Count entities per type
             type_counts = {}
-            for node_id, node_data in nodes.items():
+            for _node_id, node_data in nodes.items():
                 node_type = node_data.get("node_type", node_data.get("type", "UNKNOWN"))
                 type_counts[node_type] = type_counts.get(node_type, 0) + 1
 
@@ -821,7 +821,7 @@ class RetrievalToolkit:
 
             # Find matching entity
             matching_nodes = []
-            for node_id, node in graph.nodes.items():
+            for _node_id, node in graph.nodes.items():
                 if entity_name.lower() in node.name.lower():
                     matching_nodes.append(node)
 
@@ -942,7 +942,7 @@ class RetrievalToolkit:
 
     def temporal_filter(
         self,
-        chunk_ids: list[str] = None,
+        chunk_ids: list[str] | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         date_range: str | None = None,
@@ -1031,7 +1031,7 @@ class RetrievalToolkit:
         self,
         query: str,
         llm_client,
-        model: str = None,
+        model: str | None = None,
         level: int = 0,
         max_chunks_per_community: int = 3,
     ) -> ToolResult:
@@ -1317,7 +1317,7 @@ class RetrievalToolkit:
             # Collect source chunks from top matching communities
             source_chunk_ids = []
             source_communities = []
-            for comm_id, score in top_matches:
+            for comm_id, _score in top_matches:
                 comm = comm_lookup.get(comm_id)
                 if comm:
                     source_communities.append(comm_id)
@@ -1400,7 +1400,7 @@ class RetrievalToolkit:
         self,
         query: str,
         llm_client,
-        model: str = None,
+        model: str | None = None,
         top_entities: int = 10,
         max_relationships: int = 20,
     ) -> ToolResult:
@@ -1512,7 +1512,7 @@ class RetrievalToolkit:
                 if not node:
                     continue
                 rel_count = 0
-                for edge_id, edge in graph.edges.items():
+                for _edge_id, edge in graph.edges.items():
                     if rel_count >= max_relationships:
                         break
                     if edge.source_id == node_id or edge.target_id == node_id:

@@ -239,7 +239,7 @@ class ReActRetriever:
                 if json_match:
                     try:
                         action_input = json.loads(json_match.group())
-                    except:
+                    except json.JSONDecodeError:
                         action_input = {}
         elif current_section == "final_answer":
             final_answer = "\n".join(current_content).strip()
@@ -565,7 +565,7 @@ class ReActRetriever:
         synthesis. GPT-4o's 128K context window is the only practical limit.
         """
         observations = [step.observation for step in steps if step.observation]
-        thoughts = [step.thought for step in steps if step.thought]
+        [step.thought for step in steps if step.thought]
 
         if not observations:
             return "I was unable to find relevant information to answer this question."

@@ -614,8 +614,8 @@ class DocumentParser:
         except ImportError:
             try:
                 import PyPDF2 as pypdf
-            except ImportError:
-                raise ImportError("Install pypdf or PyPDF2: pip install pypdf")
+            except ImportError as exc:
+                raise ImportError("Install pypdf or PyPDF2: pip install pypdf") from exc
 
         text_parts = []
         pages = []
@@ -715,8 +715,8 @@ class DocumentParser:
         """Parse DOCX document"""
         try:
             from docx import Document
-        except ImportError:
-            raise ImportError("Install python-docx: pip install python-docx")
+        except ImportError as exc:
+            raise ImportError("Install python-docx: pip install python-docx") from exc
 
         doc = Document(str(path))
         text_parts = []
@@ -812,8 +812,8 @@ class DocumentParser:
         """Parse XLSX spreadsheet"""
         try:
             from openpyxl import load_workbook
-        except ImportError:
-            raise ImportError("Install openpyxl: pip install openpyxl")
+        except ImportError as exc:
+            raise ImportError("Install openpyxl: pip install openpyxl") from exc
 
         wb = load_workbook(str(path), read_only=True, data_only=True)
         text_parts = []
@@ -875,8 +875,8 @@ class DocumentParser:
         """Parse legacy XLS spreadsheet"""
         try:
             import xlrd
-        except ImportError:
-            raise ImportError("Install xlrd: pip install xlrd")
+        except ImportError as exc:
+            raise ImportError("Install xlrd: pip install xlrd") from exc
 
         wb = xlrd.open_workbook(str(path))
         text_parts = []
@@ -923,8 +923,8 @@ class DocumentParser:
         """Parse PPTX presentation"""
         try:
             from pptx import Presentation
-        except ImportError:
-            raise ImportError("Install python-pptx: pip install python-pptx")
+        except ImportError as exc:
+            raise ImportError("Install python-pptx: pip install python-pptx") from exc
 
         prs = Presentation(str(path))
         text_parts = []
@@ -1098,7 +1098,7 @@ class DocumentParser:
             page_count=1,
         )
 
-    def _parse_msg(self, path: Path, original_path: Path = None) -> ParsedDocument:
+    def _parse_msg(self, path: Path, original_path: Path | None = None) -> ParsedDocument:
         """Parse Outlook .msg embedded email attachment."""
         original_path = original_path or path
         doc_id = self._generate_id(original_path)

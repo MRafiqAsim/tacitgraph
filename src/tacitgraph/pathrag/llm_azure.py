@@ -40,8 +40,8 @@ def get_azure_client():
 )
 async def azure_openai_complete(
     prompt: str,
-    system_prompt: str = None,
-    history_messages: list[dict] = None,
+    system_prompt: str | None = None,
+    history_messages: list[dict] | None = None,
     keyword_extraction: bool = False,
     max_tokens: int = 2000,
     temperature: float = 0.3,

@@ -356,7 +356,6 @@ def run_full_pipeline(
         Combined statistics
     """
     bronze_path = f"{output_path}/bronze"
-    silver_path = f"{output_path}/silver"
 
     all_stats = {
         "start_time": datetime.now().isoformat(),
@@ -505,7 +504,6 @@ Examples:
 
     # Determine paths
     bronze_path = args.bronze or f"{args.output}/bronze"
-    silver_path = args.silver or f"{args.output}/silver"
 
     # Create output directory
     Path(args.output).mkdir(parents=True, exist_ok=True)

@@ -190,11 +190,11 @@ class KnowledgeGraph:
         kg = cls()
         kg.metadata = data.get("metadata", {})
 
-        for nid, ndata in data.get("nodes", {}).items():
+        for _nid, ndata in data.get("nodes", {}).items():
             node = GraphNode.from_dict(ndata)
             kg.add_node(node)
 
-        for eid, edata in data.get("edges", {}).items():
+        for _eid, edata in data.get("edges", {}).items():
             edge = GraphEdge.from_dict(edata)
             kg.add_edge(edge)
 
@@ -739,7 +739,7 @@ class GraphBuilder:
             entities[name] = {
                 "standard_name": name,
                 "type": entity_type,
-                "aliases": sorted(set(a for a in aliases if a and a != name)),
+                "aliases": sorted({a for a in aliases if a and a != name}),
                 "mention_count": 1,
                 "first_seen_chunk": chunk_id,
             }
@@ -814,10 +814,10 @@ class GraphBuilder:
             edges_data = json.load(f)
 
         self.graph = KnowledgeGraph()
-        for nid, ndata in nodes_data.items():
+        for _nid, ndata in nodes_data.items():
             self.graph.add_node(GraphNode.from_dict(ndata))
 
-        for eid, edata in edges_data.items():
+        for _eid, edata in edges_data.items():
             self.graph.add_edge(GraphEdge.from_dict(edata))
 
         logger.info(f"Loaded knowledge graph: {self.graph.stats()}")

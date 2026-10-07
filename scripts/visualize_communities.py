@@ -210,7 +210,7 @@ def main():
     print(f"  Level: {args.level}")
     print(f"  Nodes: {len(included_ids)}")
     print(f"  Edges: {edge_count}")
-    print(f"  Communities shown: {len(set(node_to_community.get(n, '') for n in included_ids))}")
+    print(f"  Communities shown: {len({node_to_community.get(n, '') for n in included_ids})}")
 
     # Print top communities
     print("\n  Top 10 communities by size:")

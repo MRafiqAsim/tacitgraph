@@ -274,7 +274,7 @@ class PrivacyMetricsCalculator:
         self.cdr_threshold = cdr_threshold
 
     def calculate_all_metrics(
-        self, records: list[AnonymizedRecord], sensitive_attribute: str = None
+        self, records: list[AnonymizedRecord], sensitive_attribute: str | None = None
     ) -> PrivacyMetricsResult:
         """
         Calculate all privacy metrics for a dataset.
@@ -769,8 +769,8 @@ class TextPrivacyAnalyzer:
         self,
         original_texts: list[str],
         anonymized_texts: list[str],
-        quasi_identifier_extractors: dict[str, callable] = None,
-        sensitive_attribute_extractor: Callable[..., Any] = None,
+        quasi_identifier_extractors: dict[str, callable] | None = None,
+        sensitive_attribute_extractor: Callable[..., Any] | None = None,
     ) -> PrivacyMetricsResult:
         """
         Analyze privacy metrics for anonymized texts.
@@ -786,7 +786,9 @@ class TextPrivacyAnalyzer:
         """
         records = []
 
-        for i, (original, anonymized) in enumerate(zip(original_texts, anonymized_texts)):
+        for i, (original, anonymized) in enumerate(
+            zip(original_texts, anonymized_texts, strict=False)
+        ):
             # Extract quasi-identifiers from anonymized text
             qis = self._extract_quasi_identifiers(anonymized, quasi_identifier_extractors)
 
@@ -809,7 +811,7 @@ class TextPrivacyAnalyzer:
         return self.calculator.calculate_all_metrics(records, sensitive_attr_name)
 
     def _extract_quasi_identifiers(
-        self, text: str, extractors: dict[str, callable] = None
+        self, text: str, extractors: dict[str, callable] | None = None
     ) -> list[QuasiIdentifier]:
         """Extract quasi-identifiers from text"""
         qis = []
@@ -842,7 +844,7 @@ class TextPrivacyAnalyzer:
         return qis
 
     def _extract_sensitive_attributes(
-        self, text: str, extractor: Callable[..., Any] = None
+        self, text: str, extractor: Callable[..., Any] | None = None
     ) -> list[SensitiveAttribute]:
         """Extract sensitive attributes from text"""
         if extractor:
@@ -865,7 +867,7 @@ class TextPrivacyAnalyzer:
 
 def calculate_privacy_metrics(
     records: list[AnonymizedRecord],
-    sensitive_attribute: str = None,
+    sensitive_attribute: str | None = None,
     k_threshold: int = 5,
     l_threshold: int = 3,
     t_threshold: float = 0.2,

@@ -331,7 +331,7 @@ class EmbeddingGenerator:
         valid_ids = []
         valid_embeddings = []
 
-        for chunk_id, embedding in zip(chunk_ids, embeddings):
+        for chunk_id, embedding in zip(chunk_ids, embeddings, strict=False):
             if embedding is not None:
                 valid_ids.append(chunk_id)
                 valid_embeddings.append(embedding)
@@ -373,10 +373,7 @@ class EmbeddingGenerator:
                 continue
 
             # Build text representation
-            if include_context:
-                text = f"{entity_type}: {name}"
-            else:
-                text = name
+            text = f"{entity_type}: {name}" if include_context else name
 
             entity_ids.append(entity_id)
             texts.append(text)
@@ -388,7 +385,7 @@ class EmbeddingGenerator:
         valid_ids = []
         valid_embeddings = []
 
-        for entity_id, embedding in zip(entity_ids, embeddings):
+        for entity_id, embedding in zip(entity_ids, embeddings, strict=False):
             if embedding is not None:
                 valid_ids.append(entity_id)
                 valid_embeddings.append(embedding)
@@ -436,7 +433,7 @@ class EmbeddingGenerator:
         valid_ids = []
         valid_embeddings = []
 
-        for summary_id, embedding in zip(summary_ids, embeddings):
+        for summary_id, embedding in zip(summary_ids, embeddings, strict=False):
             if embedding is not None:
                 valid_ids.append(summary_id)
                 valid_embeddings.append(embedding)

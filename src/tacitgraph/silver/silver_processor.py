@@ -97,7 +97,7 @@ class SilverLayerProcessor:
         chunk_overlap: int = 50,
         anonymization_strategy: AnonymizationStrategy = AnonymizationStrategy.REPLACE,
         confidence_threshold: float = 0.5,
-        languages: list[str] = None,
+        languages: list[str] | None = None,
     ):
         """
         Initialize the Silver layer processor.

@@ -267,7 +267,7 @@ class AnonymizationEvaluator:
                     with open(json_file, encoding="utf-8") as f:
                         chunk = json.load(f)
 
-                    original = chunk.get("text_original", "")
+                    chunk.get("text_original", "")
                     anonymized = chunk.get("text_anonymized", "")
 
                     for entity in chunk.get("pii_entities", []):
@@ -312,7 +312,7 @@ class AnonymizationEvaluator:
 
         return IdentityConsistencyResult(
             total_person_entities=total_person,
-            unique_pseudonyms=len(set(p for ps in person_pseudonyms.values() for p in ps)),
+            unique_pseudonyms=len({p for ps in person_pseudonyms.values() for p in ps}),
             consistency_score=consistency_score,
             inconsistencies=sorted(inconsistencies, key=lambda x: -x["count"]),
         )

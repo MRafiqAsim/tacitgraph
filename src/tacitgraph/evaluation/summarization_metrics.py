@@ -204,7 +204,7 @@ class SummarizationEvaluator:
             reference_summaries = [None] * len(summaries)
 
         individual_metrics = []
-        for source, summary, ref in zip(source_texts, summaries, reference_summaries):
+        for source, summary, ref in zip(source_texts, summaries, reference_summaries, strict=False):
             metrics = self.evaluate(source, summary, ref)
             individual_metrics.append(metrics)
 
@@ -301,7 +301,7 @@ class SummarizationEvaluator:
             # Cosine similarity
             import math
 
-            dot_product = sum(a * b for a, b in zip(source_emb, summary_emb))
+            dot_product = sum(a * b for a, b in zip(source_emb, summary_emb, strict=False))
             norm_a = math.sqrt(sum(a * a for a in source_emb))
             norm_b = math.sqrt(sum(b * b for b in summary_emb))
 

@@ -144,7 +144,7 @@ class CooccurrenceRelationshipExtractor(RelationshipExtractor):
 
         # Find co-occurring entity pairs
         seen_pairs: set[tuple[str, str]] = set()
-        entity_map = {e.entity.lower(): e for e in entities}
+        {e.entity.lower(): e for e in entities}
 
         for e1 in entities:
             for e2 in entities:
@@ -228,9 +228,9 @@ class LLMRelationshipExtractor(RelationshipExtractor):
         max_entities_per_call: int = 20,
         # Azure OpenAI settings
         use_azure: bool = False,
-        azure_endpoint: str = None,
+        azure_endpoint: str | None = None,
         azure_api_version: str = "2024-12-01-preview",
-        azure_deployment: str = None,
+        azure_deployment: str | None = None,
     ):
         """
         Initialize LLM relationship extractor.
@@ -430,12 +430,12 @@ class HybridRelationshipExtractor(RelationshipExtractor):
 # Factory function for easy creation
 def create_relationship_extractor(
     strategy: str = "cooccurrence",
-    openai_api_key: str = None,
+    openai_api_key: str | None = None,
     # Azure OpenAI settings
     use_azure: bool = False,
-    azure_endpoint: str = None,
+    azure_endpoint: str | None = None,
     azure_api_version: str = "2024-12-01-preview",
-    azure_deployment: str = None,
+    azure_deployment: str | None = None,
     **kwargs,
 ) -> RelationshipExtractor:
     """

@@ -123,8 +123,8 @@ class SpaCyKGExtractor(KGEntityExtractor):
 
     def __init__(
         self,
-        languages: list[str] = None,
-        entity_types: set[str] = None,
+        languages: list[str] | None = None,
+        entity_types: set[str] | None = None,
         min_entity_length: int = 2,
         include_pii_entities: bool = True,
     ):
@@ -231,12 +231,12 @@ class LLMKGExtractor(KGEntityExtractor):
         self,
         api_key: str,
         model: str = "gpt-4o",
-        entity_types: set[str] = None,
+        entity_types: set[str] | None = None,
         # Azure OpenAI settings
         use_azure: bool = False,
-        azure_endpoint: str = None,
+        azure_endpoint: str | None = None,
         azure_api_version: str = "2024-12-01-preview",
-        azure_deployment: str = None,
+        azure_deployment: str | None = None,
     ):
         """
         Initialize LLM extractor.
@@ -473,13 +473,13 @@ class HybridKGExtractor(KGEntityExtractor):
 # Factory function for easy creation
 def create_kg_extractor(
     strategy: str = "spacy",
-    languages: list[str] = None,
-    openai_api_key: str = None,
+    languages: list[str] | None = None,
+    openai_api_key: str | None = None,
     # Azure OpenAI settings
     use_azure: bool = False,
-    azure_endpoint: str = None,
+    azure_endpoint: str | None = None,
     azure_api_version: str = "2024-12-01-preview",
-    azure_deployment: str = None,
+    azure_deployment: str | None = None,
     **kwargs,
 ) -> KGEntityExtractor:
     """

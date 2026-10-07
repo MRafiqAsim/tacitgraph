@@ -389,10 +389,7 @@ class UnifiedProcessor:
         # Check for potential missed person names
         potential_names = re.findall(r"(?<=[a-z]\s)[A-Z][a-z]+", text)
         person_entities = [e for e in local_entities if e.pii_type == PIIType.PERSON]
-        if len(potential_names) > len(person_entities) * 2:
-            return True
-
-        return False
+        return len(potential_names) > len(person_entities) * 2
 
     def _entities_overlap(self, e1: PIIEntity, e2: PIIEntity) -> bool:
         """Check if two entities overlap"""
