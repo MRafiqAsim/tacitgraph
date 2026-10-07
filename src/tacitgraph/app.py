@@ -760,12 +760,17 @@ button[aria-label="share"], button[aria-label="delete"] { display: none !importa
 """
 
 
+APP_TITLE = "TacitGraph — Chat with your email archive"
+FAVICON = Path(__file__).parent / "assets" / "favicon.svg"
+
+
 def create_app() -> gr.Blocks:
-    with gr.Blocks(title="Email Knowledge Graph — Retrieval") as app:
+    with gr.Blocks(title=APP_TITLE) as app:
         gr.Markdown(
             """
-            # Email Knowledge Graph — Retrieval
-            Multi-turn chat and strategy comparison over the enterprise email knowledge graph.
+            # TacitGraph
+            **From PST to a knowledge graph you can chat with** — an end-to-end RAG pipeline.
+            Ask questions across your email archive and compare retrieval strategies.
             """
         )
 
@@ -946,6 +951,7 @@ def main():
         show_error=True,
         theme=gr.themes.Soft(),
         css=APP_CSS,
+        favicon_path=str(FAVICON),
     )
 
 

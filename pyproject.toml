@@ -1,7 +1,7 @@
 [project]
 name = "tacitgraph"
 version = "0.1.0"
-description = "From PST to a knowledge RAG you can chat with. Structures unstructured expert knowledge from Outlook archives into a knowledge graph queried with GraphRAG, PathRAG, vector, hybrid and ReAct retrieval."
+description = "From PST to a knowledge graph you can chat with: an end-to-end RAG pipeline. Structures unstructured expert knowledge from Outlook archives into a knowledge graph queried with GraphRAG, PathRAG, vector, hybrid and ReAct retrieval."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]

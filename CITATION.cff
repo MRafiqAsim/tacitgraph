@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use TacitGraph in your work, please cite it as below."
-title: "TacitGraph: From PST to a knowledge RAG you can chat with"
+title: "TacitGraph: From PST to a knowledge graph you can chat with"
 type: software
 authors:
   - family-names: Rafiq

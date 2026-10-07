@@ -2,7 +2,9 @@
 
 # TacitGraph
 
-### From PST to a knowledge RAG you can chat with.
+### From PST to a knowledge graph you can chat with
+
+**An end-to-end RAG pipeline:** email ingestion, knowledge-graph construction and graph-aware retrieval, running fully local or with a cloud LLM.
 
 *Structuring unstructured expert knowledge — Outlook archives and their attachments become a knowledge graph you can question in plain language.*
 
@@ -23,7 +25,7 @@ Much of an organisation's know-how never reaches a wiki. It lives in years of em
 - **Separates work from personal mail**, cleans quoted replies, signatures and disclaimers, detects English/Dutch content and, in LLM mode, translates it to English.
 - **Builds a knowledge graph** of people, organisations, projects, products and processes, with Leiden community detection on top.
 - **Answers questions with five retrieval strategies** — vector, GraphRAG, PathRAG, hybrid fusion and a ReAct agent — with source citations back to the original emails.
-- **Runs fully local or with an LLM**: a zero-cost offline NLP mode (spaCy, Presidio, DistilBART, sentence-transformers) or GPT-4o via Azure OpenAI / OpenAI, plus a hybrid of both.
+- **Runs fully local or with a cloud LLM**: open models on your own machine (spaCy, Presidio, DistilBART, bge-m3 embeddings, Llama 3.1 through [Ollama](https://ollama.com)) or GPT-4o via Azure OpenAI / OpenAI. No email leaves the machine in local mode.
 
 > An Azure deployment (Synapse, Cosmos DB, AI Search, App Service) is in preparation.
 
@@ -79,13 +81,13 @@ flowchart LR
 
 | Strategy | Best for | How it retrieves |
 |---|---|---|
-| **Vector** | Specific facts and quotes | Dual-vector similarity over chunk text and summaries, expanded with sibling emails from the same thread |
+| **Vector** | Specific facts, names, ticket numbers | Dense embeddings and a BM25 keyword index fused with Reciprocal Rank Fusion, expanded with sibling emails from the same thread |
 | **GraphRAG** | Themes and "what is discussed about…" | Local search over an entity's graph neighbourhood, or global search over community summaries |
 | **PathRAG** | "How is X connected to Y?" | Finds multi-hop paths between query entities in the graph and prunes them by information flow |
 | **Hybrid** | General questions | Weighted fusion of vector (0.3), PathRAG (0.4) and GraphRAG (0.3) |
 | **ReAct** | Multi-step questions | An agent that plans, calls the other strategies as tools and cross-checks the evidence |
 
-Vector, PathRAG and Hybrid work fully offline; in `local` mode their answers are extractive summaries of the retrieved emails. GraphRAG and ReAct need an LLM (`llm` or `hybrid` mode), which also produces fluent, cited answers for every strategy.
+Every strategy writes cited answers with a chat model — a local one through Ollama or a cloud one. Without any chat model, Vector, PathRAG and Hybrid still work: they quote the matching sentences of the retrieved emails instead of paraphrasing them, so nothing is invented.
 
 ### Processing modes
 
@@ -106,7 +108,10 @@ cd tacitgraph
 # Core + PST/document parsing + local NLP models
 uv sync --extra ingest --extra nlp --group models
 
-cp .env.template .env   # add your LLM credentials for llm/hybrid modes
+cp .env.template .env   # optional: cloud LLM credentials for llm/hybrid modes
+
+# Local chat model for answers (any OpenAI-compatible server works)
+ollama pull llama3.1:8b
 ```
 
 Run the pipeline layer by layer:
@@ -140,7 +145,7 @@ docker compose run --rm tacitgraph tacitgraph-index   --mode local --all
 docker compose up                                      # chat UI on http://localhost:7861
 ```
 
-Pipeline output is written to `./data` on your machine; downloaded models are cached in a Docker volume.
+Pipeline output is written to `./data` on your machine; downloaded models are cached in a Docker volume. The container reaches Ollama on the host at `host.docker.internal:11434`.
 
 Every command supports `--help`. Optional extras: `ingest` (PST and document parsing), `nlp` (local NLP mode), `eval` (RAGAS), `azure` (AI Search / Cosmos DB backends), `pathrag` (reference PathRAG implementation), or `all`.
 
@@ -148,11 +153,25 @@ Every command supports `--help`. Optional extras: `ingest` (PST and document par
 
 | What | Where |
 |---|---|
+| Chat model and embedding model | [`config/models.json`](config/models.json) — one line each |
 | Credentials, mode, retrieval options | `.env` (see [`.env.template`](.env.template)) |
 | Description of your corpus, injected into every LLM prompt | `PROMPT_DOMAIN_CONTEXT` in `.env`, or `domain_context` in [`config/prompts.json`](config/prompts.json) |
 | All LLM prompts | [`config/prompts.json`](config/prompts.json) |
 | Entity types, relationship normalisation, name aliases | [`config/entity_config.json`](config/entity_config.json) |
 | Work / personal classification rules | [`config/sensitivity_rules.yaml`](config/sensitivity_rules.yaml) |
+
+Switching models is a one-line change in `config/models.json`:
+
+```json
+{
+  "llm":       { "local": { "enabled": true, "base_url": "http://localhost:11434/v1", "model": "llama3.1:8b" } },
+  "embedding": { "local_model": "BAAI/bge-m3" }
+}
+```
+
+`model` takes any model your server provides (`qwen2.5:7b`, `mistral`, …). `LOCAL_LLM_BASE_URL` and `LOCAL_LLM_MODEL` override the file, and Azure OpenAI or OpenAI credentials in `.env` take precedence over the local server. If the server is not reachable, answers fall back to quoted sentences. The embedding model is recorded with the index, so queries always use the model the index was built with; after changing it, rebuild embeddings with `tacitgraph-index --mode local --generate-embeddings --skip-graph`.
+
+The keyword index is built in memory from the Silver chunks on the first query — instant for a personal archive; for millions of chunks, a persistent search engine (the Azure deployment uses AI Search) is the better fit.
 
 Adapting TacitGraph to a new organisation is mostly configuration: describe the corpus, add known name aliases (e.g. `"Acme Corporation" → "Acme"`), and adjust classification keywords.
 
@@ -199,7 +218,7 @@ CI runs linting and the test suite on Python 3.11 and 3.12 for every push and pu
 
 ## Privacy
 
-Mailbox archives contain personal data. TacitGraph classifies and skips personal email, keeps processed data in local files you control (`data/` is git-ignored), and lets you choose a fully offline mode: in `local` mode no email content leaves your machine. Once the models have been downloaded, set `HF_HUB_OFFLINE=1` to stop even model update checks, e.g. for air-gapped environments. Telemetry from Gradio and Hugging Face is disabled in the Docker image.
+Mailbox archives contain personal data. TacitGraph classifies and skips personal email, keeps processed data in local files you control (`data/` is git-ignored), and lets you choose a fully offline mode: in `local` mode with a local chat model no email content leaves your machine (cloud credentials in `.env` take precedence, so leave them empty for offline use). Once the models have been downloaded, set `HF_HUB_OFFLINE=1` to stop even model update checks, e.g. for air-gapped environments. Telemetry from Gradio and Hugging Face is disabled in the Docker image.
 
 Make sure you are authorised to process the archives you load and follow your organisation's data-protection rules.
 
