@@ -503,7 +503,7 @@ class ToolkitGraphRAG(ToolkitEntitySearch):
             relationships_text_parts = []
 
             # Collect source chunks with intersection ranking (same as PathRAG)
-            chunk_counts = {}
+            chunk_counts: dict[str, int] = {}
             for node_id in entity_ids:
                 node = graph.get_node(node_id)
                 if not node:

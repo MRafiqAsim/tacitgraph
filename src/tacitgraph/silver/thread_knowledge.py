@@ -49,13 +49,13 @@ class ThreadKnowledgeExtraction(ThreadStorage):
         # Deduplicate entities by (name, type) — keep first occurrence
         seen = set()
         unique_entities = []
-        for e in entities:
-            key = (e.entity.lower(), e.entity_type)
+        for entity in entities:
+            key = (entity.entity.lower(), entity.entity_type)
             if key not in seen:
                 seen.add(key)
-                unique_entities.append(e)
+                unique_entities.append(entity)
 
-        entity_dicts = [e.to_dict() for e in unique_entities]
+        entity_dicts = [entity.to_dict() for entity in unique_entities]
         self.stats["kg_entities_extracted"] += len(entity_dicts)
 
         # LLM extractor returns text_english and source_language from the same call

@@ -159,7 +159,7 @@ class AnswerGeneration(ThreadExpansion):
 
         # Grounding check
         is_grounded = True
-        missing_info: str | None = None
+        missing_info = None
 
         missing_indicators = get_prompt(
             "retrieval",

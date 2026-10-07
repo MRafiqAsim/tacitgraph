@@ -11,11 +11,12 @@ from tacitgraph.silver.thread_models import (
     ThreadChunk,
     ThreadSummary,
 )
+from tacitgraph.silver.thread_state import ThreadProcessorBase
 
 logger = logging.getLogger(__name__)
 
 
-class ThreadStorage:
+class ThreadStorage(ThreadProcessorBase):
     """Silver-layer persistence: directories, checkpoints and JSON output files."""
 
     def _create_directories(self) -> None:

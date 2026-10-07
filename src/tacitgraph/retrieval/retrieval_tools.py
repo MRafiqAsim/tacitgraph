@@ -308,7 +308,7 @@ class RetrievalToolkit(ToolkitGraphRAG):
                     loop.close()
 
             # Format results
-            results = []
+            results: list[dict[str, Any]] = []
             for pr in path_results:
                 results.append(
                     {

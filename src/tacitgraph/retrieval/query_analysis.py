@@ -6,11 +6,12 @@ import os
 from pathlib import Path
 
 from tacitgraph.prompt_loader import format_prompt, get_prompt
+from tacitgraph.retrieval.retriever_state import RetrieverState
 
 logger = logging.getLogger(__name__)
 
 
-class QueryAnalysis:
+class QueryAnalysis(RetrieverState):
     """Query understanding: keyword and entity extraction and matching against the graph."""
 
     def _extract_query_entities(self, query: str, top_n: int = 10) -> tuple[list[str], list[str]]:

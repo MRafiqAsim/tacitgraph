@@ -204,7 +204,7 @@ class HybridRetriever(AnswerGeneration):
             all_chunks = self._expand_by_thread(chunks)
 
             # Inherit parent thread's score for expanded chunks
-            thread_best_score = {}
+            thread_best_score: dict[str, float] = {}
             for c in scored_chunks:
                 tid = c.get("thread_id")
                 score = c.get("similarity_score", 0)
@@ -522,7 +522,7 @@ class HybridRetriever(AnswerGeneration):
         all_chunks_for_llm = self._apply_temporal_filter(all_chunks_for_llm)
 
         # Inherit parent thread's score for expanded chunks so they sort meaningfully.
-        thread_best_score = {}
+        thread_best_score: dict[str, float] = {}
         for c in final_chunks:
             tid = c.get("thread_id")
             score = c.get("similarity_score", 0)

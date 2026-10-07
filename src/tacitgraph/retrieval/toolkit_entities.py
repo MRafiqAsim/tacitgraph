@@ -3,6 +3,7 @@
 import json
 import logging
 from datetime import datetime
+from typing import Any
 
 from tacitgraph.retrieval.toolkit_data import ToolkitData
 from tacitgraph.retrieval.toolkit_models import ToolResult
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ToolkitEntitySearch(ToolkitData):
     """Entity matching and lookup: maps query keywords to knowledge-graph entities."""
 
-    def node_retrieval(self, keywords: list[str], top_n: int = 10) -> list[str]:
+    def node_retrieval(self, keywords: list[str], top_n: int = 10) -> list[tuple[str, str]]:
         """
         PathRAG Node Retrieval: dense vector matching of keywords against entity embeddings.
 
@@ -27,7 +28,7 @@ class ToolkitEntitySearch(ToolkitData):
             top_n: Maximum number of entities to return
 
         Returns:
-            List of entity names (graph node names)
+            List of (entity_id, entity_name) tuples
         """
         entity_ids, entity_embeddings = self._load_entity_embeddings()
         if entity_embeddings is None or len(entity_ids) == 0:
@@ -77,7 +78,7 @@ class ToolkitEntitySearch(ToolkitData):
             # (e.g. BER, Berlin Office). Skip entities whose embedding is >0.85 similar
             # to an already-selected entity to force diversity.
             matched = []
-            matched_embeddings = []
+            matched_embeddings: list[Any] = []
             seen_ids = set()
             seen_names = set()
 
@@ -185,7 +186,7 @@ class ToolkitEntitySearch(ToolkitData):
                 nodes = json.load(f)
 
             # Count entities per type
-            type_counts = {}
+            type_counts: dict[str, int] = {}
             for _node_id, node_data in nodes.items():
                 node_type = node_data.get("node_type", node_data.get("type", "UNKNOWN"))
                 type_counts[node_type] = type_counts.get(node_type, 0) + 1

@@ -29,6 +29,7 @@ from tacitgraph.silver.email_sensitivity_classifier import (
 )
 from tacitgraph.silver.email_text_cleaner import clean_email_text
 from tacitgraph.silver.kg_entity_extractor import (
+    KGEntity,
     KGEntityExtractor,
     create_kg_extractor,
 )
@@ -131,7 +132,8 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
         if processing_mode == "llm":
             from tacitgraph.silver.openai_pii_detector import OpenAIPIIDetector
 
-            self.pii_detector = OpenAIPIIDetector(
+            # PIIDetector and OpenAIPIIDetector share the detect() interface used by Anonymizer
+            self.pii_detector: Any = OpenAIPIIDetector(
                 api_key=openai_api_key,
                 confidence_threshold=confidence_threshold,
                 identity_registry=identity_registry,
@@ -217,7 +219,7 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
         # - local mode: regex-based EmailSensitivityClassifier
         # - llm mode: GPT-4o LLMSensitivityClassifier
         # - hybrid mode: regex-based (LLM fallback if available)
-        self.sensitivity_classifier = None
+        self.sensitivity_classifier: EmailSensitivityClassifier | LLMSensitivityClassifier
         if processing_mode in ("llm",) and openai_api_key:
             try:
                 self.sensitivity_classifier = LLMSensitivityClassifier(
@@ -302,95 +304,6 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
             "start_time": None,
             "end_time": None,
         }
-
-    @staticmethod
-    def _clean_text(text: str) -> str:
-        """
-        Clean text for embedding-optimized downstream use.
-
-        Preserves all semantic content and context while removing noise
-        that degrades embedding quality:
-        - Email metadata headers (From:, Date:, Subject: lines already in chunk metadata)
-        - Thread/email separator lines (--- Email 1/2 ---)
-        - Quoted-reply markers (>)
-        - Redundant whitespace and control characters
-        - Email signatures and disclaimers
-        - Forwarded message boilerplate
-
-        Keeps: all substantive content, paragraph structure (as single newlines),
-        entity names, technical terms, decisions, facts.
-        """
-        import re
-
-        if not text:
-            return ""
-
-        lines = text.split("\n")
-        cleaned_lines = []
-
-        for line in lines:
-            stripped = line.strip()
-
-            # Skip empty lines (will handle spacing later)
-            if not stripped:
-                continue
-
-            # Skip thread/email metadata headers (already in chunk metadata fields)
-            if re.match(r"^\[THREAD:", stripped, re.IGNORECASE):
-                continue
-            if re.match(r"^\[Participants:", stripped, re.IGNORECASE):
-                continue
-            if re.match(r"^\[Emails:\s*\d+\]", stripped, re.IGNORECASE):
-                continue
-            if re.match(r"^---\s*Email\s+\d+/\d+\s*---", stripped):
-                continue
-            if re.match(r"^---\s*Forwarded\s*---", stripped, re.IGNORECASE):
-                continue
-
-            # Skip email header lines (From:, Date:, Subject:, To:, Cc:, Sent:)
-            # but NOT lines where these words appear mid-sentence
-            if re.match(r"^(From|Date|Sent|To|Cc|Bcc|Subject):\s", stripped):
-                continue
-
-            # Remove quoted-reply markers but keep the content
-            stripped = re.sub(r"^>+\s*", "", stripped)
-
-            # Skip device/app boilerplate and disclaimers (keep regards/thanks for context)
-            if re.match(
-                r"^(sent from my|get outlook|disclaimer|confidential|this email)",
-                stripped,
-                re.IGNORECASE,
-            ):
-                continue
-            if re.match(r"^[-_=]{5,}$", stripped):
-                continue
-
-            # Skip lines that are just a person's name (likely signature, 1-3 words, all title case)
-            if (
-                re.match(r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\s*$", stripped)
-                and len(stripped) < 40
-            ):
-                # Only skip if it looks like a standalone name (not part of content)
-                if len(stripped.split()) <= 3:
-                    continue
-
-            # Normalize tabs to spaces
-            stripped = stripped.replace("\t", " ")
-
-            # Collapse multiple spaces
-            stripped = re.sub(r" {2,}", " ", stripped)
-
-            if stripped:
-                cleaned_lines.append(stripped)
-
-        # Join with single space — flat text is best for embedding models
-        # Embedding models don't benefit from newlines; dense text = better vectors
-        result = " ".join(cleaned_lines)
-
-        # Final cleanup: collapse any remaining multiple spaces
-        result = re.sub(r" {2,}", " ", result)
-
-        return result.strip()
 
     def _classify_email(self, email: dict[str, Any]) -> SensitivityResult:
         """Classify a single email as personal or not_personal."""
@@ -563,8 +476,8 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
                             chunk_english, chunk_entities_raw, language, chunk_id=chunk_id
                         )
                     else:
-                        chunk_entities = kg_entity_dicts
-                        chunk_rels = kg_relationships
+                        chunk_entities = kg_entity_dicts or []
+                        chunk_rels = kg_relationships or []
                         chunk_english = text_english if len(text_chunks) == 1 else chunk_cleaned
 
                     thread_chunk = ThreadChunk(
@@ -758,7 +671,8 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
                 # Per-chunk extraction for large segments
                 if extract_per_chunk:
                     if skip_llm_for_segment:
-                        chunk_entities, chunk_entities_raw = [], []
+                        chunk_entities: list[dict[str, Any]] = []
+                        chunk_entities_raw: list[KGEntity] = []
                         chunk_english = chunk_cleaned
                         chunk_rels = []
                     else:
@@ -783,8 +697,8 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
                             consecutive_filter_blocks_seg = 0
                 else:
                     # Small segment: inherit segment-level entities
-                    chunk_entities = kg_entity_dicts
-                    chunk_rels = kg_relationships
+                    chunk_entities = kg_entity_dicts or []
+                    chunk_rels = kg_relationships or []
                     if llm_text_english and len(text_chunks) == 1:
                         chunk_english = text_english
                     else:
@@ -834,9 +748,9 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
                 summary_text = self._summarize_email(summary_email, seg_lang)
                 if summary_text:
                     self.stats["email_summaries_generated"] += 1
-                    for chunk in seg_chunks:
-                        chunk.summary = summary_text
-                        self._save_individual_chunk(chunk)
+                    for seg_chunk in seg_chunks:
+                        seg_chunk.summary = summary_text
+                        self._save_individual_chunk(seg_chunk)
 
             seg_counter += 1
 
@@ -849,7 +763,7 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
         Each work email is chunked, summarized, and saved to email_chunks/.
         A thread summary is generated across all work emails for full-thread context.
         """
-        chunks = []
+        chunks: list[ThreadChunk] = []
 
         # Classify each email individually — keep only not_personal ones with content
         work_emails = []
@@ -948,7 +862,7 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
             chunks.extend(email_chunks)
 
         # Process attachments separately → attachment_chunks/ + attachment_summaries/
-        attachment_ids = []
+        attachment_ids: list[str] = []
         if all_attachment_contents:
             # Use earliest email timestamps for attachments
             all_ts = [self._get_email_timestamps(e) for e in work_emails]
@@ -984,7 +898,7 @@ class ThreadAwareProcessor(ThreadAttachmentProcessing):
 
     def _process_single_email(self, thread: EmailThread) -> list[ThreadChunk]:
         """Process a single email (attachments processed separately)"""
-        chunks = []
+        chunks: list[ThreadChunk] = []
         email = thread.emails[0] if thread.emails else None
 
         if not email:

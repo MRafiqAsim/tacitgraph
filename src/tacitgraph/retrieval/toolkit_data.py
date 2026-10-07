@@ -5,10 +5,12 @@ import logging
 import os
 from typing import Any
 
+from tacitgraph.retrieval.toolkit_state import ToolkitState
+
 logger = logging.getLogger(__name__)
 
 
-class ToolkitData:
+class ToolkitData(ToolkitState):
     """Loading of Gold-layer artifacts (graph, embeddings, chunks) and the LLM client."""
 
     def _get_llm_client(self):

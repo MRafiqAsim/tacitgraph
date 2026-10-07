@@ -34,7 +34,7 @@ class ThreadExpansion(QueryAnalysis):
         existing_ids = {c.get("chunk_id") for c in chunks}
 
         # Rank threads by their best chunk score, expand only top 3
-        thread_best_score = {}
+        thread_best_score: dict[str, float] = {}
         for chunk in chunks:
             tid = chunk.get("thread_id")
             score = chunk.get("similarity_score", 0)
@@ -55,7 +55,7 @@ class ThreadExpansion(QueryAnalysis):
             self.silver_path / "not_personal" / "document_chunks",
         ]
 
-        sibling_chunks = []
+        sibling_chunks: list[dict[str, Any]] = []
         for search_dir in search_dirs:
             if not search_dir.exists():
                 continue

@@ -2,7 +2,9 @@
 
 import logging
 from pathlib import Path
+from typing import Any
 
+from tacitgraph.silver.kg_entity_extractor import KGEntity
 from tacitgraph.silver.thread_models import ThreadChunk
 from tacitgraph.silver.thread_summaries import ThreadSummarization
 
@@ -152,6 +154,8 @@ class ThreadAttachmentProcessing(ThreadSummarization):
                     f"att_{att_content.attachment_id}_{chunk.chunk_index}"
                 )
 
+                kg_entity_dicts: list[dict[str, Any]]
+                kg_entities_raw: list[KGEntity]
                 # Circuit breaker: skip LLM if 3+ consecutive content filter blocks
                 if skip_llm_for_attachment:
                     kg_entity_dicts, kg_entities_raw, llm_text_english, detected_lang = (

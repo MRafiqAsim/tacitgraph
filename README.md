@@ -25,7 +25,7 @@ Much of an organisation's know-how never reaches a wiki. It lives in years of em
 - **Answers questions with five retrieval strategies** — vector, GraphRAG, PathRAG, hybrid fusion and a ReAct agent — with source citations back to the original emails.
 - **Runs fully local or with an LLM**: a zero-cost offline NLP mode (spaCy, Presidio, DistilBART, sentence-transformers) or GPT-4o via Azure OpenAI / OpenAI, plus a hybrid of both.
 
-> Looking for the cloud deployment (Synapse, Cosmos DB, AI Search, App Service)? See **[tacitgraph-azure](https://github.com/MRafiqAsim/tacitgraph-azure)**.
+> An Azure deployment (Synapse, Cosmos DB, AI Search, App Service) is in preparation.
 
 ## How it works
 
@@ -199,7 +199,9 @@ CI runs linting and the test suite on Python 3.11 and 3.12 for every push and pu
 
 ## Privacy
 
-Mailbox archives contain personal data. TacitGraph classifies and skips personal email, keeps processed data in local files you control (`data/` is git-ignored), and lets you choose a fully offline mode. Make sure you are authorised to process the archives you load and follow your organisation's data-protection rules.
+Mailbox archives contain personal data. TacitGraph classifies and skips personal email, keeps processed data in local files you control (`data/` is git-ignored), and lets you choose a fully offline mode: in `local` mode no email content leaves your machine. Once the models have been downloaded, set `HF_HUB_OFFLINE=1` to stop even model update checks, e.g. for air-gapped environments. Telemetry from Gradio and Hugging Face is disabled in the Docker image.
+
+Make sure you are authorised to process the archives you load and follow your organisation's data-protection rules.
 
 ## Support
 

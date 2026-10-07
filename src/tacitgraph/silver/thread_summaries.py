@@ -174,7 +174,7 @@ class ThreadSummarization(ThreadKnowledgeExtraction):
             if self.use_azure:
                 from openai import AzureOpenAI
 
-                client = AzureOpenAI(
+                client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=self.openai_api_key,
                     azure_endpoint=self.azure_endpoint,
                     api_version=self.azure_api_version,
@@ -320,7 +320,7 @@ class ThreadSummarization(ThreadKnowledgeExtraction):
                 import httpx
                 from openai import AzureOpenAI
 
-                client = AzureOpenAI(
+                client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=self.openai_api_key,
                     azure_endpoint=self.azure_endpoint,
                     api_version=self.azure_api_version,
@@ -433,7 +433,7 @@ class ThreadSummarization(ThreadKnowledgeExtraction):
                 import httpx
                 from openai import AzureOpenAI
 
-                client = AzureOpenAI(
+                client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=self.openai_api_key,
                     azure_endpoint=self.azure_endpoint,
                     api_version=self.azure_api_version,
