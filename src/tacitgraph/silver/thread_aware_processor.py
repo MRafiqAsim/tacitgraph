@@ -867,9 +867,6 @@ class ThreadAwareProcessor:
                 logger.info(
                     f"Skipping garbled text '{att_content.filename}' (readable ratio: {word_char_ratio:.1%})"
                 )
-                print(
-                    f"    Skipping garbled attachment: '{att_content.filename}' (readable ratio: {word_char_ratio:.1%})"
-                )
                 continue
 
             # 4. Knowledge/transactional filtering is currently disabled:

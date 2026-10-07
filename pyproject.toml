@@ -31,6 +31,7 @@ dependencies = [
     "leidenalg>=0.10",
     "nano-vectordb>=0.0.4",
     "python-dotenv>=1.0",
+    "pyyaml>=6.0",
     "python-dateutil>=2.8.2",
     "tenacity>=8.2",
     "tqdm>=4.66",
@@ -102,6 +103,19 @@ dev = [
     "pre-commit>=3.7",
 ]
 
+# spaCy models used by the local NLP mode (pinned to the installed spaCy 3.8 line):
+#   uv sync --extra nlp --group models
+models = [
+    "en-core-web-trf",
+    "en-core-web-lg",
+    "nl-core-news-lg",
+]
+
+[tool.uv.sources]
+en-core-web-trf = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.8.0/en_core_web_trf-3.8.0-py3-none-any.whl" }
+en-core-web-lg = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl" }
+nl-core-news-lg = { url = "https://github.com/explosion/spacy-models/releases/download/nl_core_news_lg-3.8.0/nl_core_news_lg-3.8.0-py3-none-any.whl" }
+
 [build-system]
 requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
@@ -161,3 +175,4 @@ markers = ["integration: needs Azure credentials or large models (deselect with 
 [tool.coverage.run]
 source = ["tacitgraph"]
 branch = true
+omit = ["*/tacitgraph/pathrag/*"]  # vendored third-party code

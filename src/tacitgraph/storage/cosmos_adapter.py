@@ -281,7 +281,6 @@ class CosmosAdapter:
                     else:
                         failed += 1
                 logger.info(f"  Nodes: {count + failed}/{total} ({count} ok, {failed} failed)")
-                print(f"  Nodes: {count + failed}/{total} ({count} ok, {failed} failed)")
 
         return count
 
@@ -319,7 +318,6 @@ class CosmosAdapter:
                     else:
                         failed += 1
                 logger.info(f"  Edges: {count + failed}/{total} ({count} ok, {failed} failed)")
-                print(f"  Edges: {count + failed}/{total} ({count} ok, {failed} failed)")
 
         return count
 
@@ -334,10 +332,8 @@ class CosmosAdapter:
                 break
             self._gremlin_query(f"g.V().limit({batch_size}).drop()")
             total_dropped += min(batch_size, remaining)
-            print(f"  Dropped batch — ~{remaining} remaining")
             logger.info(f"  Dropped batch — ~{remaining} remaining")
         logger.info(f"Graph cleared — {total_dropped} vertices dropped")
-        print(f"Graph cleared — {total_dropped} vertices dropped")
         return total_dropped
 
     # =========================================================================

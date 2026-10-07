@@ -40,4 +40,3 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --frozen
       - run: uv run pytest --cov --cov-report=term-missing
-
