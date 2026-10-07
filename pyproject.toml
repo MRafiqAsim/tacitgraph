@@ -39,6 +39,7 @@ dependencies = [
     "langid>=1.1.6",
     "gradio>=4.0",
     "pyvis>=0.3.2",
+    "matplotlib>=3.8",
 ]
 
 [project.optional-dependencies]
@@ -74,8 +75,8 @@ azure = [
     "gremlinpython>=3.7.2",
     "opencensus-ext-azure>=1.1",
 ]
-# RAGAS evaluation and plots
-eval = ["ragas>=0.4", "matplotlib>=3.8"]
+# RAGAS evaluation
+eval = ["ragas>=0.4"]
 # Reference PathRAG implementation in tacitgraph.pathrag
 pathrag = ["graspologic>=3.3"]
 all = ["tacitgraph[ingest,nlp,azure,eval,pathrag]"]

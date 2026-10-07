@@ -4270,6 +4270,7 @@ dependencies = [
     { name = "langdetect" },
     { name = "langid" },
     { name = "leidenalg" },
+    { name = "matplotlib" },
     { name = "nano-vectordb" },
     { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -4295,7 +4296,6 @@ all = [
     { name = "graspologic" },
     { name = "gremlinpython" },
     { name = "libpff-python" },
-    { name = "matplotlib" },
     { name = "msoffcrypto-tool" },
     { name = "opencensus-ext-azure" },
     { name = "openpyxl" },
@@ -4322,7 +4322,6 @@ azure = [
     { name = "opencensus-ext-azure" },
 ]
 eval = [
-    { name = "matplotlib" },
     { name = "ragas" },
 ]
 ingest = [
@@ -4377,7 +4376,7 @@ requires-dist = [
     { name = "langid", specifier = ">=1.1.6" },
     { name = "leidenalg", specifier = ">=0.10" },
     { name = "libpff-python", marker = "extra == 'ingest'", specifier = ">=20231205" },
-    { name = "matplotlib", marker = "extra == 'eval'", specifier = ">=3.8" },
+    { name = "matplotlib", specifier = ">=3.8" },
     { name = "msoffcrypto-tool", marker = "extra == 'ingest'", specifier = ">=5.0" },
     { name = "nano-vectordb", specifier = ">=0.0.4" },
     { name = "networkx", specifier = ">=3.2" },
