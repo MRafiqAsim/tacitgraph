@@ -23,7 +23,7 @@ Much of an organisation's know-how never reaches a wiki. It lives in years of em
 - **Separates work from personal mail**, cleans quoted replies, signatures and disclaimers, detects English/Dutch content and, in LLM mode, translates it to English.
 - **Builds a knowledge graph** of people, organisations, projects, products and processes, with Leiden community detection on top.
 - **Answers questions with five retrieval strategies** — vector, GraphRAG, PathRAG, hybrid fusion and a ReAct agent — with source citations back to the original emails.
-- **Runs fully local or with an LLM**: a zero-cost NLP mode (spaCy, Presidio, DistilBART) or GPT-4o via Azure OpenAI / OpenAI, plus a hybrid of both.
+- **Runs fully local or with an LLM**: a zero-cost offline NLP mode (spaCy, Presidio, DistilBART, sentence-transformers) or GPT-4o via Azure OpenAI / OpenAI, plus a hybrid of both.
 
 > Looking for the cloud deployment (Synapse, Cosmos DB, AI Search, App Service)? See **[tacitgraph-azure](https://github.com/MRafiqAsim/tacitgraph-azure)**.
 
@@ -85,6 +85,8 @@ flowchart LR
 | **Hybrid** | General questions | Weighted fusion of vector (0.3), PathRAG (0.4) and GraphRAG (0.3) |
 | **ReAct** | Multi-step questions | An agent that plans, calls the other strategies as tools and cross-checks the evidence |
 
+Vector, PathRAG and Hybrid work fully offline; in `local` mode their answers are extractive summaries of the retrieved emails. GraphRAG and ReAct need an LLM (`llm` or `hybrid` mode), which also produces fluent, cited answers for every strategy.
+
 ### Processing modes
 
 | Mode | Classification, NER, summaries | Cost |
@@ -123,6 +125,22 @@ uv run tacitgraph-index --mode local --all
 uv run tacitgraph-query --mode local --strategy hybrid -q "Who worked on the ERP migration?"
 uv run tacitgraph-app --mode local          # chat UI on http://localhost:7861
 ```
+
+### Or run everything with Docker
+
+No local Python needed — the image contains the pipeline CLIs, the local NLP models and the chat app:
+
+```bash
+docker compose build
+mkdir -p data && cp /path/to/archive.pst data/
+
+docker compose run --rm tacitgraph tacitgraph-ingest  --pst data/archive.pst --output data
+docker compose run --rm tacitgraph tacitgraph-process --mode local --with-summaries
+docker compose run --rm tacitgraph tacitgraph-index   --mode local --all
+docker compose up                                      # chat UI on http://localhost:7861
+```
+
+Pipeline output is written to `./data` on your machine; downloaded models are cached in a Docker volume.
 
 Every command supports `--help`. Optional extras: `ingest` (PST and document parsing), `nlp` (local NLP mode), `eval` (RAGAS), `azure` (AI Search / Cosmos DB backends), `pathrag` (reference PathRAG implementation), or `all`.
 

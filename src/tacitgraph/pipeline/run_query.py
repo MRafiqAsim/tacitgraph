@@ -188,7 +188,9 @@ def compare_across_modes(query: str, strategy: RetrievalStrategy, verbose: bool 
 
         print(f"\n--- {mode.upper()} ---")
         try:
-            retriever = HybridRetriever(str(gold), str(silver) if silver.exists() else None)
+            retriever = HybridRetriever(
+                str(gold), str(silver) if silver.exists() else None, mode=mode
+            )
             result = retriever.retrieve(query, strategy)
 
             print(f"Answer preview: {(result.answer or '(none)')[:200]}...")
@@ -298,7 +300,7 @@ def main():
 
     # Initialize retriever
     print(f"Initializing retriever (mode: {args.mode or 'custom'})...")
-    retriever = HybridRetriever(str(gold_path), silver_path)
+    retriever = HybridRetriever(str(gold_path), silver_path, mode=args.mode or "llm")
 
     if args.query:
         if args.compare:

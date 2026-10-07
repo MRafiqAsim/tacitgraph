@@ -1,0 +1,18 @@
+services:
+  tacitgraph:
+    build: .
+    image: tacitgraph:latest
+    ports:
+      - "7861:7861"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # Pipeline layers (bronze/silver/gold) live on the host
+      - ./data:/app/data
+      # Hugging Face models (summariser, embeddings) are downloaded once
+      - hf-cache:/home/app/.cache/huggingface
+    command: ["tacitgraph-app", "--mode", "local", "--port", "7861"]
+
+volumes:
+  hf-cache:
