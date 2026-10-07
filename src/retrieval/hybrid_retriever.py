@@ -594,16 +594,8 @@ class HybridRetriever:
                             + "\n".join(f"- {name}" for name in entity_names)
                             + "\n\n"
                         )
-                # DISABLED: Injecting all thread subjects biases the LLM toward
-                # subject-line keyword matches, surfacing wrong emails as top sources
-                # instead of relying on the scored retrieval results.
-                # thread_subjects = self._get_all_thread_subjects()
-                # if thread_subjects:
-                #     extra_context += (
-                #         f"All email thread subjects ({len(thread_subjects)} total):\n"
-                #         + "\n".join(f"- {s}" for s in sorted(thread_subjects))
-                #         + "\n\n"
-                #     )
+                # Thread subjects are deliberately not injected: they bias the LLM
+                # toward subject-line keyword matches instead of the scored results.
 
             if pathrag_result.metadata.get("paths_found", 0) > 0:
                 extra_context += f"Found {pathrag_result.metadata['paths_found']} reasoning paths.\n"
@@ -1117,11 +1109,7 @@ class HybridRetriever:
                 except Exception:
                     continue
 
-        # TODO: Email summaries (disabled — sibling chunks + thread summary suffice)
-        # email_summaries_dir = self.silver_path / "not_personal" / "email_summaries"
-        # if email_summaries_dir.exists():
-        #     for summary_file in email_summaries_dir.glob("*.json"):
-        #         ...
+        # Per-email summaries are not added: sibling chunks + thread summary suffice.
 
         expanded_count = len(sibling_chunks) + len(summary_context)
         if expanded_count:

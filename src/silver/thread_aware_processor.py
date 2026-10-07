@@ -838,22 +838,8 @@ class ThreadAwareProcessor:
                 print(f"    Skipping garbled attachment: '{att_content.filename}' (readable ratio: {word_char_ratio:.1%})")
                 continue
 
-            # 4. Classify attachment (knowledge vs transactional)
-            # TODO: Re-enable when attachment classification is needed for filtering
-            # if hasattr(self, 'attachment_classifier') and self.attachment_classifier:
-            #     cls_result = self.attachment_classifier.classify(att_content)
-            #     classification = cls_result.classification
-            #     att_content.classification = classification
-            #     att_content.classification_confidence = cls_result.confidence
-            #     att_content.classification_signals = cls_result.signals
-            # else:
-            #     classification = att_content.classification or "knowledge"
-            #
-            # # 4. Skip transactional attachments (invoices, receipts, etc.)
-            # if classification != "knowledge":
-            #     logger.info(f"Skipping {classification} attachment '{att_content.filename}'")
-            #     self.stats["attachments_skipped_non_knowledge"] += 1
-            #     continue
+            # 4. Knowledge/transactional filtering is currently disabled:
+            #    every readable attachment is treated as knowledge.
             classification = "knowledge"
 
             self.stats["attachments_with_text"] += 1

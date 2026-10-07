@@ -181,10 +181,6 @@ class NetworkXStorage(BaseGraphStorage):
         if os.path.exists(file_name):
             return nx.read_graphml(file_name)
         return None
-    # def load_nx_graph(file_name) -> nx.Graph:
-    #     if os.path.exists(file_name):
-    #         return nx.read_graphml(file_name)
-    #     return None
 
     @staticmethod
     def write_nx_graph(graph: nx.DiGraph, file_name):
