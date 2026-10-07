@@ -129,3 +129,41 @@ def test_chunk_text_convenience_function():
     chunks = chunk_text(paragraphs(6), "doc", chunk_size=60, overlap=10)
     assert len(chunks) > 1
     assert all(c.doc_id == "doc" for c in chunks)
+
+
+# --- Regression: overlapping fixed-size windows used to loop forever ---------
+
+
+@pytest.fixture
+def fail_after_seconds():
+    """Turn a hang into a test failure instead of blocking the suite."""
+    import signal
+
+    def _timeout(*_):
+        raise TimeoutError("chunking did not terminate")
+
+    previous = signal.signal(signal.SIGALRM, _timeout)
+    signal.alarm(10)
+    yield
+    signal.alarm(0)
+    signal.signal(signal.SIGALRM, previous)
+
+
+@pytest.mark.parametrize(("size", "overlap"), [(10, 2), (10, 9), (10, 10), (10, 25)])
+def test_fixed_size_with_overlap_terminates_and_covers_text(fail_after_seconds, size, overlap):
+    chunker = SemanticChunker(
+        strategy=ChunkingStrategy.FIXED_SIZE, chunk_size=size, chunk_overlap=overlap
+    )
+    text = " ".join(f"word{i}" for i in range(200))
+    chunks = chunker.chunk(text, "doc-1")
+    assert chunks
+    assert chunks[0].text.startswith("word0")
+    assert chunks[-1].text.rstrip().endswith("word199")
+
+
+def test_default_chunker_handles_long_unbroken_token(fail_after_seconds):
+    # A long URL or inline base64 blob has no separators to split on.
+    blob = "aGVsbG8" * 3000
+    chunks = SemanticChunker().chunk(blob, "doc-1")
+    assert chunks
+    assert "".join(c.text for c in chunks).replace(" ", "").startswith(blob[:100])

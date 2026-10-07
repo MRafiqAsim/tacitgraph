@@ -264,8 +264,10 @@ class SemanticChunker:
 
                 chunks.append((chunk_text, start_char, end_char))
 
-                # Move forward with overlap
-                start_token = end_token - self.chunk_overlap
+                if end_token >= total_tokens:
+                    break
+                # Move forward with overlap, always making progress
+                start_token = max(end_token - self.chunk_overlap, start_token + 1)
 
         else:
             # Fallback: character-based
@@ -276,7 +278,9 @@ class SemanticChunker:
             while start < len(text):
                 end = min(start + char_size, len(text))
                 chunks.append((text[start:end], start, end))
-                start = end - char_overlap
+                if end >= len(text):
+                    break
+                start = max(end - char_overlap, start + 1)
 
         return chunks
 

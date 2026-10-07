@@ -50,13 +50,29 @@ def test_remove_from_email_without_body_is_noop():
     assert DisclaimerRemover().remove_from_email({"subject": "x"}) == {"subject": "x"}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known limitation: the broad 'This email ... confidential ... delete' "
-    "pattern also matches ordinary sentences, removing real content.",
-)
 def test_ordinary_sentence_mentioning_confidential_is_kept():
     paragraph = (
         "This email is about the confidential Project Atlas budget. Please delete the old draft."
     )
     assert paragraph in remove_disclaimers(f"Hi team,\n\n{paragraph}\n\nThanks, Jane")
+
+
+def test_outlook_double_spaced_disclaimer_is_removed():
+    # Outlook's HTML-to-text conversion puts a blank line between every line.
+    body = (
+        "Please install the reporting tool on the build server.\n\n \n\nThanks,\n\nJane Doe\n\n"
+        "This electronic mail is intended only for the addressee(s). \n\n"
+        "Any use, distribution, copying or disclosure by unauthorized personnel "
+        "is strictly prohibited.\n\n \n\n"
+    )
+    cleaned = remove_disclaimers(body)
+    assert "strictly prohibited" not in cleaned
+    assert "Please install the reporting tool on the build server." in cleaned
+    assert "Jane Doe" in cleaned
+
+
+def test_disclaimer_match_does_not_swallow_distant_content():
+    filler = "Status update for Project Atlas. " * 40
+    body = f"This email covers the confidential rollout.\n{filler}\nIf you are not the intended recipient, delete it."
+    cleaned = remove_disclaimers(body)
+    assert "Status update for Project Atlas." in cleaned

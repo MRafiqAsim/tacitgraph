@@ -14,21 +14,36 @@ Keeps:
 
 import re
 
+# Trigger words must lie close together: disclaimers are short, so a bounded gap
+# keeps a match from running across ordinary content between two trigger words.
+# (Outlook plain text often puts a blank line between every line, so paragraph
+# boundaries are not a usable limit.)
+_P = r".{0,400}?"
+# A match ends at the next blank line or the end of the text, within a short reach.
+_END = r".{0,200}?(?:\n\s*\n|\s*\Z)"
+
 # Common disclaimer patterns (case-insensitive)
 DISCLAIMER_PATTERNS = [
-    # Confidentiality notices - match entire block
-    r"Important\s+Notice:.*?(?:strictly\s+prohibited|unauthorized).*?(?:\n\n|\n*$)",
-    r"(?:This|The)\s+(?:e-?mail|message|communication).*?(?:confidential|privileged).*?(?:prohibited|delete|destroy|notify).*?(?:\n\n|\n*$)",
-    r"If\s+you\s+(?:are\s+not|have\s+received).*?(?:intended\s+recipient|in\s+error).*?(?:delete|notify|destroy).*?(?:\n\n|\n*$)",
+    # Confidentiality notices
+    rf"Important\s+Notice:{_P}(?:strictly\s+prohibited|unauthori[sz]ed){_P}{_END}",
+    # "This email ... confidential ..." only counts with legal-notice vocabulary;
+    # ordinary sentences about confidential topics are kept.
+    rf"(?:This|The)\s+(?:e-?mail|message|communication){_P}(?:confidential|privileged)"
+    rf"{_P}(?:intended\s+(?:solely\s+|only\s+)?(?:for\s+the\s+)?(?:recipient|addressee)"
+    rf"|received\s+(?:this|it){_P}in\s+error|unauthori[sz]ed|strictly\s+prohibited){_P}{_END}",
+    rf"If\s+you\s+(?:are\s+not|have\s+received){_P}(?:intended\s+recipient|in\s+error)"
+    rf"{_P}(?:delete|notify|destroy){_P}{_END}",
     # Legal disclaimers
-    r"(?:DISCLAIMER|LEGAL\s+NOTICE|CONFIDENTIALITY\s+NOTICE):?.*?(?:\n\n|\Z)",
-    r"This\s+(?:electronic\s+)?(?:mail|message)\s+is\s+intended\s+only\s+for.*?(?:strictly\s+prohibited|unauthorized).*?(?:\n\n|\n*$)",
+    rf"(?:DISCLAIMER|LEGAL\s+NOTICE|CONFIDENTIALITY\s+NOTICE):?{_P}{_END}",
+    rf"This\s+(?:electronic\s+)?(?:mail|message)\s+is\s+intended\s+only\s+for{_P}"
+    rf"(?:strictly\s+prohibited|unauthori[sz]ed){_P}{_END}",
     # Privacy statements
-    r"(?:Any|The)\s+(?:views|opinions).*?(?:author|sender).*?(?:do\s+not|does\s+not).*?(?:represent|reflect).*?(?:\n\n|\n*$)",
-    r"(?:Please\s+)?(?:consider|think).*?(?:environment|planet).*?(?:before\s+printing).*?(?:\n\n|\n*$)",
+    rf"(?:Any|The)\s+(?:views|opinions){_P}(?:author|sender){_P}(?:do\s+not|does\s+not)"
+    rf"{_P}(?:represent|reflect){_P}{_END}",
+    rf"(?:Please\s+)?(?:consider|think){_P}(?:environment|planet){_P}before\s+printing{_P}{_END}",
     # Virus disclaimers
-    r"(?:This\s+)?(?:e-?mail|message).*?(?:virus|malware).*?(?:scanned|checked).*?(?:\n\n|\n*$)",
-    r"(?:We|The\s+company).*?(?:no\s+(?:liability|responsibility)).*?(?:virus|damage).*?(?:\n\n|\n*$)",
+    rf"(?:This\s+)?(?:e-?mail|message){_P}(?:virus|malware){_P}(?:scanned|checked){_P}{_END}",
+    rf"(?:We|The\s+company){_P}no\s+(?:liability|responsibility){_P}(?:virus|damage){_P}{_END}",
 ]
 
 

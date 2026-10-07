@@ -1134,6 +1134,7 @@ class DocumentParser:
 
             parts.append(body)
             text = "\n".join(parts).strip()
+            title = msg.subject or original_path.name
 
             msg.close()
 
@@ -1144,11 +1145,8 @@ class DocumentParser:
                 source_path=str(original_path),
                 doc_type=DocumentType.UNKNOWN,
                 text=text,
-                title=msg.subject if msg.subject else original_path.name,
+                title=title,
                 page_count=1,
-                # ParsedDocument has no `metadata` field: this raises TypeError, which the
-                # except below turns into an empty document (known issue, see tests).
-                metadata={"source_format": "msg", "embedded_email": True},  # type: ignore[call-arg]
             )
 
         except Exception as e:

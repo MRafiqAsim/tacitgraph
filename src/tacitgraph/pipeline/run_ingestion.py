@@ -156,29 +156,6 @@ def extract_bronze_attachments(bronze_path: str) -> dict:
     return stats
 
 
-def cleanup_bronze_attachments(bronze_path: str) -> dict:
-    """
-    Remove legacy duplicate storage from Bronze attachments.
-
-    Removes 32-char email_id directories (BronzeLayerLoader duplicates),
-    migrates old attachments_cache/ to co-located metadata, and removes
-    empty directories.
-
-    Args:
-        bronze_path: Bronze layer path
-
-    Returns:
-        Cleanup statistics
-    """
-    logger.info(f"Cleaning up legacy attachment storage: {bronze_path}")
-
-    processor = AttachmentProcessor(bronze_path=bronze_path)
-    stats = processor.cleanup_legacy_storage()  # type: ignore[attr-defined]  # method no longer exists
-
-    logger.info(f"Attachment cleanup complete: {stats}")
-    return stats
-
-
 def parse_documents_to_bronze(
     docs_path: str, bronze_path: str, extensions: list | None = None
 ) -> dict:
@@ -434,9 +411,6 @@ Examples:
 
   # Extract text from attachments on existing Bronze
   python run_ingestion.py --bronze ./data/bronze --extract-attachments
-
-  # Clean up legacy duplicate storage
-  python run_ingestion.py --bronze ./data/bronze --cleanup-attachments
         """,
     )
 
@@ -472,11 +446,6 @@ Examples:
         action="store_true",
         help="Extract text from all Bronze attachments (standalone operation)",
     )
-    parser.add_argument(
-        "--cleanup-attachments",
-        action="store_true",
-        help="Remove legacy duplicate storage (32-char dirs, old cache)",
-    )
 
     # NOTE: Email sensitivity and attachment classification moved to Silver layer.
     # Use run_thread_processing.py --mode local|llm|hybrid for classification.
@@ -496,11 +465,9 @@ Examples:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Validate inputs
-    if not any(
-        [args.pst, args.documents, args.bronze, args.extract_attachments, args.cleanup_attachments]
-    ):
+    if not any([args.pst, args.documents, args.bronze, args.extract_attachments]):
         parser.error(
-            "Must specify at least one of: --pst, --documents, --bronze, --extract-attachments, or --cleanup-attachments"
+            "Must specify at least one of: --pst, --documents, --bronze or --extract-attachments"
         )
 
     # Determine paths
@@ -514,9 +481,6 @@ Examples:
         # Standalone attachment operations (no Silver processing needed)
         if args.extract_attachments:
             extract_bronze_attachments(bronze_path)
-
-        if args.cleanup_attachments:
-            cleanup_bronze_attachments(bronze_path)
 
         # If only attachment flags were set, we're done
         if not any([args.pst, args.documents, args.bronze]):

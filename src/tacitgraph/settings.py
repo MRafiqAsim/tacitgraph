@@ -208,7 +208,7 @@ class PipelineConfig:
 
         # Convert mode string to enum
         if "mode" in data:
-            data["mode"] = ProcessingMode(data["mode"])
+            data["mode"] = ProcessingMode.from_string(data["mode"])
 
         # Build nested configs
         if "openai" in data:
@@ -294,6 +294,6 @@ def init_config(
     global _config
 
     _config = PipelineConfig(
-        mode=ProcessingMode(mode), openai=OpenAIConfig(api_key=openai_api_key), **kwargs
+        mode=ProcessingMode.from_string(mode), openai=OpenAIConfig(api_key=openai_api_key), **kwargs
     )
     return _config

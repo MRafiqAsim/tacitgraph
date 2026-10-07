@@ -117,3 +117,17 @@ def test_init_config_sets_global():
     assert config.mode is ProcessingMode.LOCAL
     assert config.openai.api_key == "sk-test"
     assert config.gold_path == "/g"
+
+
+@pytest.mark.parametrize(
+    ("alias", "expected"), [("llm", "openai"), ("LLM", "openai"), ("local", "local")]
+)
+def test_init_config_accepts_mode_aliases(alias, expected):
+    config = settings.init_config(mode=alias, openai_api_key="sk-test")
+    assert config.mode.value == expected
+
+
+def test_load_from_file_accepts_mode_alias(tmp_path):
+    path = tmp_path / "config.json"
+    path.write_text('{"mode": "llm"}', encoding="utf-8")
+    assert PipelineConfig.load_from_file(str(path)).mode.value == "openai"
