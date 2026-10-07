@@ -41,7 +41,9 @@ class ToolkitEntitySearch(ToolkitData):
             if self._embedding_generator is None:
                 from tacitgraph.gold.embedding_generator import EmbeddingGenerator
 
-                self._embedding_generator = EmbeddingGenerator(str(self.gold_path), mode=self.mode)
+                self._embedding_generator = EmbeddingGenerator(
+                    str(self.gold_path), mode=self.mode, match_index=True
+                )
 
             generator = self._embedding_generator
 

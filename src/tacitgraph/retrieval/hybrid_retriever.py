@@ -13,6 +13,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from tacitgraph.llm_client import chat_model
 from tacitgraph.retrieval.answer_generation import AnswerGeneration
 
 from .date_filter import extract_date_range
@@ -81,12 +82,12 @@ class HybridConfig:
 
     # Answer generation
     use_llm_answer: bool = True
-    answer_model: str = ""  # resolved from AZURE_OPENAI_DEPLOYMENT env var
+    answer_model: str = ""  # resolved from the configured LLM provider
     max_context_chunks: int = 20
 
     def __post_init__(self):
         if not self.answer_model:
-            self.answer_model = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+            self.answer_model = chat_model()
         if not self.graphrag_search_type:
             self.graphrag_search_type = os.getenv("GRAPHRAG_SEARCH_TYPE", "auto")
 
@@ -286,7 +287,7 @@ class HybridRetriever(AnswerGeneration):
                     )
 
                     self.toolkit._embedding_generator = EmbeddingGenerator(
-                        str(self.gold_path), EmbeddingConfig(), mode=self.mode
+                        str(self.gold_path), EmbeddingConfig(), mode=self.mode, match_index=True
                     )
                     generator = self.toolkit._embedding_generator
 
@@ -642,7 +643,7 @@ class HybridRetriever(AnswerGeneration):
                     )
 
                     self.toolkit._embedding_generator = EmbeddingGenerator(
-                        str(self.gold_path), EmbeddingConfig(), mode=self.mode
+                        str(self.gold_path), EmbeddingConfig(), mode=self.mode, match_index=True
                     )
                     generator = self.toolkit._embedding_generator
 

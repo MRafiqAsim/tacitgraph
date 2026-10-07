@@ -4,13 +4,18 @@ services:
     image: tacitgraph:latest
     ports:
       - "7861:7861"
+    environment:
+      # Answers come from an Ollama server on the host (see config/models.json)
+      LOCAL_LLM_BASE_URL: http://host.docker.internal:11434/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux; Docker Desktop resolves it already
     env_file:
       - path: .env
         required: false
     volumes:
       # Pipeline layers (bronze/silver/gold) live on the host
       - ./data:/app/data
-      # Hugging Face models (summariser, embeddings) are downloaded once
+      # Hugging Face models (summariser, bge-m3 embeddings) are downloaded once
       - hf-cache:/home/app/.cache/huggingface
     command: ["tacitgraph-app", "--mode", "local", "--port", "7861"]
 

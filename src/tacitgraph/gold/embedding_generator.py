@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from tacitgraph.model_config import load_models_config
+
 try:
     import numpy as np
 
@@ -23,6 +25,8 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_LOCAL_EMBEDDING_MODEL = "BAAI/bge-m3"
+
 
 @dataclass
 class EmbeddingConfig:
@@ -30,7 +34,7 @@ class EmbeddingConfig:
 
     # Model settings
     model: str = "text-embedding-3-small"  # OpenAI model
-    local_model: str = "all-MiniLM-L6-v2"  # sentence-transformers model (384 dims)
+    local_model: str = ""  # sentence-transformers model; from config/models.json
     dimensions: int = 1536  # Embedding dimensions (overridden by local model)
     batch_size: int = 100  # Batch size for API calls
 
@@ -44,9 +48,12 @@ class EmbeddingConfig:
     cost_per_1m_tokens: float = 0.02
 
     def __post_init__(self):
-        env_model = os.environ.get("LOCAL_EMBEDDING_MODEL")
-        if env_model:
-            self.local_model = env_model
+        if not self.local_model:
+            self.local_model = (
+                os.environ.get("LOCAL_EMBEDDING_MODEL")
+                or load_models_config().get("embedding", {}).get("local_model")
+                or DEFAULT_LOCAL_EMBEDDING_MODEL
+            )
 
 
 class EmbeddingGenerator:
@@ -65,6 +72,7 @@ class EmbeddingGenerator:
         gold_path: str,
         config: EmbeddingConfig | None = None,
         mode: str = "llm",
+        match_index: bool = False,
     ):
         """
         Initialize the embedding generator.
@@ -73,6 +81,8 @@ class EmbeddingGenerator:
             gold_path: Path to Gold layer for output
             config: Embedding configuration
             mode: Processing mode — "local" uses sentence-transformers, "llm"/"hybrid" uses OpenAI
+            match_index: Embed queries with the model the saved index was built with,
+                so a changed config cannot produce vectors of the wrong size
         """
         self.gold_path = Path(gold_path)
         self.config = config or EmbeddingConfig()
@@ -88,6 +98,13 @@ class EmbeddingGenerator:
         self.use_azure = False
 
         if mode == "local":
+            if match_index:
+                indexed = self._indexed_local_model()
+                if indexed and indexed != self.config.local_model:
+                    logger.info(
+                        f"Using {indexed} to match the index (configured: {self.config.local_model})"
+                    )
+                    self.config.local_model = indexed
             self._initialize_local_model()
         else:
             self._initialize_client()
@@ -106,12 +123,24 @@ class EmbeddingGenerator:
                 self.local_model = SentenceTransformer(model_name, local_files_only=True)
             except Exception:
                 self.local_model = SentenceTransformer(model_name)
-            self.config.dimensions = self.local_model.get_sentence_embedding_dimension()
+            # Renamed in sentence-transformers 5; the old name still works but warns
+            get_dimension = getattr(self.local_model, "get_embedding_dimension", None) or (
+                self.local_model.get_sentence_embedding_dimension
+            )
+            self.config.dimensions = get_dimension()
             logger.info(f"Local embedding model loaded ({self.config.dimensions} dims)")
         except ImportError:
             logger.error("sentence-transformers not installed. pip install sentence-transformers")
         except Exception as e:
             logger.error(f"Failed to load local model: {e}")
+
+    def _indexed_local_model(self) -> str | None:
+        """Local model recorded when the chunk embeddings were saved, if any."""
+        config_file = self.embeddings_path / "chunks_config.json"
+        if not config_file.exists():
+            return None
+        with open(config_file, encoding="utf-8") as f:
+            return json.load(f).get("local_model")
 
     def _initialize_client(self):
         """Initialize OpenAI client for embeddings."""
@@ -467,11 +496,13 @@ class EmbeddingGenerator:
         # Save config
         config_file = self.embeddings_path / f"{name}_config.json"
         config_data = {
-            "model": self.config.model,
+            "model": self.config.local_model if self.mode == "local" else self.config.model,
             "dimensions": embeddings.shape[1] if len(embeddings.shape) > 1 else 0,
             "count": len(ids),
             "generated_at": datetime.now().isoformat(),
         }
+        if self.mode == "local":
+            config_data["local_model"] = self.config.local_model
         with open(config_file, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=2)
 

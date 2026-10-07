@@ -7,12 +7,12 @@ that combines PathRAG, GraphRAG, and vector search strategies.
 
 import json
 import logging
-import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from tacitgraph.llm_client import chat_model, create_chat_client, llm_provider
 from tacitgraph.prompt_loader import format_prompt, get_prompt
 
 from .retrieval_tools import RetrievalToolkit, ToolResult
@@ -74,12 +74,12 @@ class ReActConfig:
 
     max_steps: int = 10
     temperature: float = 0.0
-    model: str = ""  # resolved from AZURE_OPENAI_DEPLOYMENT env var
+    model: str = ""  # resolved from the configured LLM provider
     verbose: bool = True
 
     def __post_init__(self):
         if not self.model:
-            self.model = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+            self.model = chat_model()
 
 
 class ReActRetriever:
@@ -130,39 +130,11 @@ class ReActRetriever:
         logger.info("ReActRetriever initialized")
 
     def _initialize_client(self):
-        """Initialize OpenAI client."""
-        try:
-            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-            azure_key = os.getenv("AZURE_OPENAI_API_KEY")
-
-            if azure_endpoint and azure_key:
-                from openai import AzureOpenAI
-
-                self.client = AzureOpenAI(
-                    azure_endpoint=azure_endpoint,
-                    api_key=azure_key,
-                    api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
-                )
-                self.use_azure = True
-                # model already resolved from env in ReActConfig.__post_init__
-                logger.info("Using Azure OpenAI for ReAct")
-                return
-
-            openai_key = os.getenv("OPENAI_API_KEY")
-            if openai_key:
-                from openai import OpenAI
-
-                self.client = OpenAI(api_key=openai_key)
-                self.use_azure = False
-                logger.info("Using OpenAI for ReAct")
-                return
-
-            logger.warning("No OpenAI credentials found")
-
-        except ImportError:
-            logger.error("openai package not installed")
-        except Exception as e:
-            logger.error(f"Failed to initialize client: {e}")
+        """Initialize the chat client (Azure OpenAI, OpenAI or a local server)."""
+        self.client = create_chat_client()
+        self.use_azure = llm_provider() == "azure"
+        if self.client is None:
+            logger.warning("No LLM provider configured")
 
     def _build_tool_descriptions(self) -> str:
         """Build tool descriptions for the system prompt."""

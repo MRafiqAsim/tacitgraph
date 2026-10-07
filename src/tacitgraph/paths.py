@@ -1,7 +1,7 @@
 """Filesystem locations shared across the package.
 
 Both locations can be overridden with environment variables, which is how the
-Docker image and the Synapse notebooks point the package at their own layout.
+Docker image points the package at its own layout.
 """
 
 import os

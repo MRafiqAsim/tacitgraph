@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from tacitgraph.retrieval.lexical_index import reciprocal_rank_fusion
 from tacitgraph.retrieval.toolkit_graphrag import ToolkitGraphRAG
 from tacitgraph.retrieval.toolkit_models import Tool, ToolResult
 
@@ -55,6 +56,7 @@ class RetrievalToolkit(ToolkitGraphRAG):
         self._chunk_ids = None
         self._entity_embeddings = None
         self._entity_ids = None
+        self._lexical_index = None
         self._llm_client = None
         self._llm_model = None
 
@@ -333,7 +335,7 @@ class RetrievalToolkit(ToolkitGraphRAG):
                         )
 
                         self._embedding_generator = EmbeddingGenerator(
-                            str(self.gold_path), EmbeddingConfig(), mode=self.mode
+                            str(self.gold_path), EmbeddingConfig(), mode=self.mode, match_index=True
                         )
                         generator = self._embedding_generator
 
@@ -403,30 +405,40 @@ class RetrievalToolkit(ToolkitGraphRAG):
                     message="Chunk embeddings not available",
                 )
 
-            # Search
-            results = generator.similarity_search(
-                query,
-                chunk_embeddings,
-                chunk_ids,
-                top_k=top_k * 2,  # Get more for filtering
-            )
+            # Rank every chunk by cosine similarity; summary embeddings ("_sum")
+            # map to their original chunk, which keeps its best score
+            cosine: dict[str, float] = {}
+            for emb_id, score in generator.similarity_search(
+                query, chunk_embeddings, chunk_ids, top_k=len(chunk_ids)
+            ):
+                load_id = emb_id.removesuffix("_sum")
+                cosine.setdefault(load_id, score)
+            vector_ranking = list(cosine)
 
-            # Load chunk details (deduplicate text vs summary matches)
+            # Fuse with keyword ranking so rare terms (names, codes) are not lost
+            keyword_hits = self._load_lexical_index().search(query, top_k=top_k * 5)
+            keyword_scores = dict(keyword_hits)
+            if keyword_hits:
+                ranking = [
+                    cid
+                    for cid, _ in reciprocal_rank_fusion(
+                        vector_ranking[: top_k * 5], [cid for cid, _ in keyword_hits]
+                    )
+                ]
+            else:
+                ranking = vector_ranking
+
+            # Load chunk details
             detailed_results = []
-            seen_chunks = set()
-            for chunk_id, score in results:
-                # Strip _sum suffix — summary embeddings map to original chunk
-                load_id = chunk_id.removesuffix("_sum")
-                if load_id in seen_chunks:
-                    continue
-                seen_chunks.add(load_id)
-
+            for load_id in ranking:
+                score = cosine.get(load_id, 0.0)
                 chunk_data = self._load_chunk(load_id)
                 if chunk_data:
                     detailed_results.append(
                         {
                             "chunk_id": load_id,
                             "similarity_score": score,
+                            "keyword_score": keyword_scores.get(load_id, 0.0),
                             "text": chunk_data.get("text_english")
                             or chunk_data.get("text_anonymized", ""),
                             "text_english": chunk_data.get("text_english", ""),

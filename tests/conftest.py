@@ -2,16 +2,21 @@
 
 import pytest
 
-from tacitgraph import entity_registry, prompt_loader
+from tacitgraph import entity_registry, llm_client, model_config, prompt_loader
 
 
 @pytest.fixture(autouse=True)
 def _reset_caches():
-    entity_registry._catalog = None
-    prompt_loader._CACHE = None
+    def clear():
+        entity_registry._catalog = None
+        prompt_loader._CACHE = None
+        model_config.load_models_config.cache_clear()
+        llm_client._local_config.cache_clear()
+        llm_client._local_server_reachable.cache_clear()
+
+    clear()
     yield
-    entity_registry._catalog = None
-    prompt_loader._CACHE = None
+    clear()
 
 
 @pytest.fixture

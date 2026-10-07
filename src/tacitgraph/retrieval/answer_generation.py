@@ -1,44 +1,54 @@
-"""Answer generation: LLM or local summarisation, grounding checks and confidence scores."""
+"""Answer generation: LLM or local extractive quoting, grounding checks and confidence scores."""
 
 import logging
-import os
+import re
 from typing import Any
 
+from tacitgraph.llm_client import create_chat_client
 from tacitgraph.prompt_loader import format_prompt, get_prompt
+from tacitgraph.retrieval.lexical_index import tokenize
 from tacitgraph.retrieval.thread_expansion import ThreadExpansion
 
 logger = logging.getLogger(__name__)
 
+LOCAL_ANSWER_CHUNKS = 5
+LOCAL_ANSWER_SENTENCES = 4
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def _split_sentences(text: str) -> list[str]:
+    """Split text into trimmed sentences of a readable length."""
+    sentences = (s.strip(" -*>\t") for s in _SENTENCE_RE.split(text))
+    return [s for s in sentences if 20 <= len(s) <= 400]
+
+
+def _drop_repeated_paragraphs(text: str) -> str:
+    """Remove verbatim repeats; small local models sometimes emit the answer twice."""
+    seen: set[str] = set()
+    kept = []
+    for paragraph in text.split("\n\n"):
+        key = paragraph.strip()
+        if key and key in seen:
+            continue
+        seen.add(key)
+        kept.append(paragraph)
+    return "\n\n".join(kept)
+
+
+def _cite(chunk: dict[str, Any], n: int) -> str:
+    """One-line source label: subject, sender and date of the chunk's email."""
+    parts = [chunk.get("thread_subject") or chunk.get("source_attachment_filename") or ""]
+    parts.append(chunk.get("email_sender") or "")
+    parts.append((chunk.get("sent_timestamp") or chunk.get("received_timestamp") or "")[:10])
+    return f"— [{n}] " + " · ".join(p for p in parts if p)
+
 
 class AnswerGeneration(ThreadExpansion):
-    """Answer generation: LLM or local summarisation, grounding checks and confidence scores."""
+    """Answer generation: LLM or local extractive quoting, grounding checks and confidence scores."""
 
     def _initialize_llm(self):
-        """Initialize LLM for answer generation."""
-        try:
-            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-            azure_key = os.getenv("AZURE_OPENAI_API_KEY")
-
-            if azure_endpoint and azure_key:
-                from openai import AzureOpenAI
-
-                self.llm_client = AzureOpenAI(
-                    azure_endpoint=azure_endpoint,
-                    api_key=azure_key,
-                    api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
-                )
-                # answer_model already resolved from env in HybridConfig.__post_init__
-                return
-
-            openai_key = os.getenv("OPENAI_API_KEY")
-            if openai_key:
-                from openai import OpenAI
-
-                self.llm_client = OpenAI(api_key=openai_key)
-                return
-
-        except Exception as e:
-            logger.warning(f"Failed to initialize LLM: {e}")
+        """Initialize the LLM client for answer generation (None when no provider is set)."""
+        self.llm_client = create_chat_client()
 
     def _generate_answer(
         self, query: str, chunks: list[dict[str, Any]], extra_context: str = ""
@@ -53,7 +63,7 @@ class AnswerGeneration(ThreadExpansion):
         if not chunks and not extra_context:
             return "", True, None, 0
 
-        # Local mode: use BART summarizer or extractive fallback
+        # Local mode: quote matching sentences from the retrieved chunks
         if not self.llm_client:
             answer, is_grounded, missing_info = self._generate_local_answer(
                 query, chunks, extra_context
@@ -149,7 +159,9 @@ class AnswerGeneration(ThreadExpansion):
             # extract_llm_content raises LLMContentError for content_filter / length
             from tacitgraph.llm_response import extract_llm_content
 
-            answer = extract_llm_content(response, context="answer generation")
+            answer = _drop_repeated_paragraphs(
+                extract_llm_content(response, context="answer generation")
+            )
             total_tokens = getattr(response.usage, "total_tokens", 0) if response.usage else 0
         except Exception as e:
             # Handles: LLMContentError (content_filter/length), RateLimitError,
@@ -205,53 +217,45 @@ class AnswerGeneration(ThreadExpansion):
     def _generate_local_answer(
         self, query: str, chunks: list[dict[str, Any]], extra_context: str = ""
     ) -> tuple[str, bool, str | None]:
-        """Generate answer locally using BART summarizer or extractive fallback."""
-        # Combine chunk texts
-        texts = []
-        for chunk in chunks[:5]:
-            text = chunk.get(
-                "text",
-                chunk.get("summary")
-                or chunk.get("text_english")
-                or chunk.get("text_anonymized", ""),
+        """Answer without an LLM by quoting the retrieved sentences that match the query.
+
+        Abstractive summarisers rewrite names and invent facts when fed several
+        unrelated emails, so local mode only quotes source text and cites it.
+        """
+        terms = set(tokenize(query))
+        candidates: list[tuple[int, int, int, str, str]] = []
+        for rank, chunk in enumerate(chunks[:LOCAL_ANSWER_CHUNKS]):
+            text = chunk.get("text_english") or chunk.get("text") or chunk.get("summary") or ""
+            for pos, sentence in enumerate(_split_sentences(text)):
+                hits = len(terms & set(tokenize(sentence)))
+                if hits:
+                    candidates.append((hits, -rank, -pos, sentence, _cite(chunk, rank + 1)))
+
+        if not candidates:
+            top = chunks[0]
+            text = top.get("summary") or top.get("text_english") or top.get("text") or ""
+            snippet = " ".join(_split_sentences(text)[:2])
+            if not snippet:
+                return "", False, "No matching passages found"
+            return (
+                "No retrieved passage mentions the terms in your question. "
+                f"Closest match:\n\n> {snippet}\n\n{_cite(top, 1)}",
+                False,
+                "No passage mentions the query terms",
             )
-            thread = chunk.get("thread_subject", "")
-            if thread:
-                texts.append(f"[{thread}] {text}")
-            else:
-                texts.append(text)
 
-        combined = "\n\n".join(texts)
-
-        if extra_context:
-            combined = f"{extra_context}\n\n{combined}"
-
-        # Try BART summarizer
-        try:
-            from tacitgraph.silver.local_summarizer import summarize_text
-
-            summary = summarize_text(combined, max_length=200, min_length=50)
-            if summary:
-                return summary, True, None
-        except Exception as e:
-            logger.debug(f"BART summarization failed: {e}")
-
-        # Extractive fallback: return first few chunk texts
-        answer_parts = []
-        for chunk in chunks[:3]:
-            text = chunk.get(
-                "text",
-                chunk.get("summary")
-                or chunk.get("text_english")
-                or chunk.get("text_anonymized", ""),
-            )
-            thread = chunk.get("thread_subject", "")
-            if thread:
-                answer_parts.append(f"**{thread}**: {text}")
-            else:
-                answer_parts.append(text)
-
-        return "\n\n".join(answer_parts), True, None
+        candidates.sort(reverse=True)
+        quoted: list[str] = []
+        seen: set[str] = set()
+        for _, _, _, sentence, cite in candidates:
+            key = sentence.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            quoted.append(f"> {sentence}\n\n{cite}")
+            if len(quoted) >= LOCAL_ANSWER_SENTENCES:
+                break
+        return "From the retrieved emails:\n\n" + "\n\n".join(quoted), True, None
 
     def _calculate_confidence(self, chunks: list[dict[str, Any]]) -> float:
         """Calculate confidence as average cosine similarity of retrieved chunks.

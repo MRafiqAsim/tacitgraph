@@ -5,6 +5,7 @@ import logging
 import os
 from datetime import datetime
 
+from tacitgraph.llm_client import chat_model
 from tacitgraph.retrieval.toolkit_entities import ToolkitEntitySearch
 from tacitgraph.retrieval.toolkit_models import ToolResult
 
@@ -61,7 +62,7 @@ class ToolkitGraphRAG(ToolkitEntitySearch):
 
         from tacitgraph.prompt_loader import get_prompt
 
-        model = model or os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+        model = model or chat_model()
         start_time = datetime.now()
 
         try:
@@ -286,7 +287,7 @@ class ToolkitGraphRAG(ToolkitEntitySearch):
                     )
 
                     self._embedding_generator = EmbeddingGenerator(
-                        str(self.gold_path), EmbeddingConfig(), mode=self.mode
+                        str(self.gold_path), EmbeddingConfig(), mode=self.mode, match_index=True
                     )
 
                 try:
@@ -429,7 +430,7 @@ class ToolkitGraphRAG(ToolkitEntitySearch):
         """
         from tacitgraph.prompt_loader import get_prompt
 
-        model = model or os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+        model = model or chat_model()
         start_time = datetime.now()
 
         try:

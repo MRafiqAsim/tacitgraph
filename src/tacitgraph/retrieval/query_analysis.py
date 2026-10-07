@@ -2,9 +2,9 @@
 
 import json
 import logging
-import os
 from pathlib import Path
 
+from tacitgraph.llm_client import chat_model
 from tacitgraph.prompt_loader import format_prompt, get_prompt
 from tacitgraph.retrieval.retriever_state import RetrieverState
 
@@ -130,7 +130,7 @@ class QueryAnalysis(RetrieverState):
 
             if not self.llm_client:
                 return self._extract_keywords_local(query)
-            deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+            deployment = chat_model()
 
             response = self.llm_client.chat.completions.create(
                 model=deployment,

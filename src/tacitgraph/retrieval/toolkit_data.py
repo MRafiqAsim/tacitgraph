@@ -2,12 +2,19 @@
 
 import json
 import logging
-import os
 from typing import Any
 
+from tacitgraph.llm_client import chat_model, create_chat_client
+from tacitgraph.retrieval.lexical_index import BM25Index
 from tacitgraph.retrieval.toolkit_state import ToolkitState
 
 logger = logging.getLogger(__name__)
+
+CHUNK_DIRS = (
+    "not_personal/email_chunks",
+    "not_personal/attachment_chunks",
+    "not_personal/document_chunks",
+)
 
 
 class ToolkitData(ToolkitState):
@@ -16,21 +23,8 @@ class ToolkitData(ToolkitState):
     def _get_llm_client(self):
         """Lazy-initialize LLM client for global/local search tools."""
         if self._llm_client is None:
-            import httpx
-
-            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-            azure_key = os.getenv("AZURE_OPENAI_API_KEY")
-            if azure_endpoint and azure_key:
-                from openai import AzureOpenAI
-
-                self._llm_client = AzureOpenAI(
-                    azure_endpoint=azure_endpoint,
-                    api_key=azure_key,
-                    api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-                    timeout=httpx.Timeout(120.0, connect=10.0),
-                    max_retries=2,
-                )
-                self._llm_model = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+            self._llm_client = create_chat_client()
+            self._llm_model = chat_model()
         return self._llm_client, self._llm_model
 
     def _load_graph(self):
@@ -61,7 +55,7 @@ class ToolkitData(ToolkitState):
         if self._chunk_embeddings is None:
             from tacitgraph.gold.embedding_generator import EmbeddingGenerator
 
-            generator = EmbeddingGenerator(str(self.gold_path), mode=self.mode)
+            generator = EmbeddingGenerator(str(self.gold_path), mode=self.mode, match_index=True)
             self._embedding_generator = generator
             try:
                 self._chunk_ids, self._chunk_embeddings = generator.load_embeddings("chunks")
@@ -76,7 +70,7 @@ class ToolkitData(ToolkitState):
         if self._entity_embeddings is None:
             from tacitgraph.gold.embedding_generator import EmbeddingGenerator
 
-            generator = EmbeddingGenerator(str(self.gold_path), mode=self.mode)
+            generator = EmbeddingGenerator(str(self.gold_path), mode=self.mode, match_index=True)
             try:
                 self._entity_ids, self._entity_embeddings = generator.load_embeddings("entities")
                 # Build ID → name mapping from graph nodes
@@ -95,16 +89,37 @@ class ToolkitData(ToolkitState):
                 self._entity_id_to_name = {}
         return self._entity_ids, self._entity_embeddings
 
+    def _load_lexical_index(self) -> BM25Index:
+        """Lazy-build a BM25 index over the embedded Silver chunks."""
+        if self._lexical_index is None:
+            chunk_ids, _ = self._load_embeddings()
+            wanted = {cid.removesuffix("_sum") for cid in chunk_ids or []}
+            docs: list[tuple[str, str]] = []
+            if self.silver_path:
+                for pattern in CHUNK_DIRS:
+                    for chunk_file in sorted((self.silver_path / pattern).glob("*.json")):
+                        if chunk_file.stem not in wanted:
+                            continue
+                        with open(chunk_file, encoding="utf-8") as f:
+                            chunk = json.load(f)
+                        fields = (
+                            chunk.get("thread_subject"),
+                            chunk.get("email_sender"),
+                            chunk.get("source_attachment_filename"),
+                            chunk.get("text_english") or chunk.get("text_anonymized"),
+                            chunk.get("summary"),
+                        )
+                        docs.append((chunk_file.stem, " ".join(f for f in fields if f)))
+            self._lexical_index = BM25Index(docs)
+            logger.info(f"Keyword index built over {len(docs)} chunks")
+        return self._lexical_index
+
     def _load_chunk(self, chunk_id: str) -> dict[str, Any] | None:
         """Load chunk data from Silver layer."""
         if not self.silver_path:
             return None
 
-        for pattern in [
-            "not_personal/email_chunks",
-            "not_personal/attachment_chunks",
-            "not_personal/document_chunks",
-        ]:
+        for pattern in CHUNK_DIRS:
             chunk_path = self.silver_path / pattern / f"{chunk_id}.json"
             if chunk_path.exists():
                 with open(chunk_path, encoding="utf-8") as f:
