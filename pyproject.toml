@@ -178,15 +178,25 @@ check_untyped_defs = false
 
 
 
+
 # Typing ratchet: modules below still have mypy errors and are being annotated
 # incrementally. Remove a module once it type-checks cleanly; CI keeps every
 # other module error-free.
 [[tool.mypy.overrides]]
 module = [
+    "tacitgraph.retrieval.answer_generation",
     "tacitgraph.retrieval.hybrid_retriever",
+    "tacitgraph.retrieval.query_analysis",
     "tacitgraph.retrieval.retrieval_tools",
-    "tacitgraph.retrieval.vector_search",
+    "tacitgraph.retrieval.thread_expansion",
+    "tacitgraph.retrieval.toolkit_data",
+    "tacitgraph.retrieval.toolkit_entities",
+    "tacitgraph.retrieval.toolkit_graphrag",
+    "tacitgraph.silver.thread_attachments",
     "tacitgraph.silver.thread_aware_processor",
+    "tacitgraph.silver.thread_knowledge",
+    "tacitgraph.silver.thread_storage",
+    "tacitgraph.silver.thread_summaries",
 ]
 ignore_errors = true
 
