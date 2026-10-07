@@ -60,7 +60,7 @@ class PathRAGRetriever:
 
         # Lazy-loaded components
         self._graph = None
-        self._nx_graph = None
+        self._nx_graph: nx.Graph | None = None
         self._embeddings = None
 
         logger.info("PathRAGRetriever initialized")
@@ -149,7 +149,9 @@ class PathRAGRetriever:
         """
         G = self._build_nx_graph()
 
-        result = defaultdict(lambda: {"paths": [], "edges": set()})
+        result: defaultdict[Any, dict[str, Any]] = defaultdict(
+            lambda: {"paths": [], "edges": set()}
+        )
         path_stats = {"1-hop": 0, "2-hop": 0, "3-hop": 0}
         one_hop_paths = []
         two_hop_paths = []
@@ -232,8 +234,8 @@ class PathRAGRetriever:
         threshold = self.config.flow_threshold
         alpha = self.config.flow_alpha
 
-        edge_weights = defaultdict(float)
-        follow_dict = {}
+        edge_weights: defaultdict[Any, float] = defaultdict(float)
+        follow_dict: dict[str, set[str]] = {}
 
         # Build follow dictionary from paths
         for p in paths:
@@ -285,7 +287,7 @@ class PathRAGRetriever:
         # Calculate path weights
         path_weights = []
         for p in paths:
-            path_weight = 0
+            path_weight: float = 0
             for i in range(len(p) - 1):
                 edge = (p[i], p[i + 1])
                 path_weight += edge_weights.get(edge, 0)
@@ -411,7 +413,7 @@ class PathRAGRetriever:
                     chunks_per_node.append(set(kg_node.source_chunks))
 
             # Score chunks by how many path entities mention them (intersection priority)
-            chunk_counts = {}
+            chunk_counts: dict[str, int] = {}
             for chunk_set in chunks_per_node:
                 for cid in chunk_set:
                     chunk_counts[cid] = chunk_counts.get(cid, 0) + 1

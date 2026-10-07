@@ -133,7 +133,7 @@ class AttachmentProcessor:
         Returns:
             Dict mapping email_id to list of attachment info
         """
-        mapping = {}
+        mapping: dict[str, Any] = {}
         emails_dir = self.bronze_path / "emails"
 
         if not emails_dir.exists():
@@ -426,7 +426,7 @@ class AttachmentProcessor:
         Returns:
             List of attachment file info
         """
-        files = []
+        files: list[dict[str, Any]] = []
 
         if not self.attachments_dir.exists():
             logger.warning(f"Attachments directory not found: {self.attachments_dir}")

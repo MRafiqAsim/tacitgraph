@@ -70,7 +70,7 @@ class IdentityRegistry:
     def identity_count(self) -> int:
         return len(self._by_email)
 
-    def register_identity(self, email: str, name: str) -> Identity:
+    def register_identity(self, email: str, name: str) -> Identity | None:
         """
         Register or update an identity.
 
@@ -271,7 +271,7 @@ class IdentityRegistry:
             names.update(identity.aliases)
         return names
 
-    def save(self, path: str) -> None:
+    def save(self, path: str | Path) -> None:
         """Save registry to JSON file."""
         data = {
             "version": "1.0",

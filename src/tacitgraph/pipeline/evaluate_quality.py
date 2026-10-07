@@ -87,7 +87,7 @@ def evaluate_anonymization_quality(
 
     else:
         # Local mode
-        class DetectorWrapper:
+        class DetectorWrapper:  # type: ignore[no-redef]  # one definition per mode branch
             def __init__(self):
                 self.detector = PIIDetector(confidence_threshold=confidence_threshold)
 

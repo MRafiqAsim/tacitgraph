@@ -355,19 +355,19 @@ Covered:"""
                 r.answer_correctness for r in results if r.answer_correctness is not None
             ]
             if correctness_scores:
-                correctness_avg = np.mean(correctness_scores)
+                correctness_avg = float(np.mean(correctness_scores))
 
         return AggregatedResults(
             num_samples=len(results),
-            avg_faithfulness=np.mean(faithfulness_scores),
-            avg_answer_relevancy=np.mean(relevancy_scores),
-            avg_context_precision=np.mean(precision_scores),
-            avg_context_recall=np.mean(recall_scores),
+            avg_faithfulness=float(np.mean(faithfulness_scores)),
+            avg_answer_relevancy=float(np.mean(relevancy_scores)),
+            avg_context_precision=float(np.mean(precision_scores)),
+            avg_context_recall=float(np.mean(recall_scores)),
             avg_answer_correctness=correctness_avg,
-            std_faithfulness=np.std(faithfulness_scores),
-            std_answer_relevancy=np.std(relevancy_scores),
-            std_context_precision=np.std(precision_scores),
-            std_context_recall=np.std(recall_scores),
+            std_faithfulness=float(np.std(faithfulness_scores)),
+            std_answer_relevancy=float(np.std(relevancy_scores)),
+            std_context_precision=float(np.std(precision_scores)),
+            std_context_recall=float(np.std(recall_scores)),
             individual_results=results,
             evaluated_at=datetime.now().isoformat(),
         )

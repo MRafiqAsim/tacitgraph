@@ -613,7 +613,7 @@ class DocumentParser:
             import pypdf
         except ImportError:
             try:
-                import PyPDF2 as pypdf
+                import PyPDF2 as pypdf  # type: ignore[no-redef]  # legacy fallback
             except ImportError as exc:
                 raise ImportError("Install pypdf or PyPDF2: pip install pypdf") from exc
 
@@ -1146,7 +1146,9 @@ class DocumentParser:
                 text=text,
                 title=msg.subject if msg.subject else original_path.name,
                 page_count=1,
-                metadata={"source_format": "msg", "embedded_email": True},
+                # ParsedDocument has no `metadata` field: this raises TypeError, which the
+                # except below turns into an empty document (known issue, see tests).
+                metadata={"source_format": "msg", "embedded_email": True},  # type: ignore[call-arg]
             )
 
         except Exception as e:

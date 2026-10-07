@@ -227,8 +227,8 @@ class PIIDetector:
         self.identity_registry = identity_registry
 
         # Initialize detection engines
-        self._presidio_analyzer = None
-        self._spacy_models = {}
+        self._presidio_analyzer: Any = None
+        self._spacy_models: dict[str, Any] = {}
 
         if use_presidio:
             self._init_presidio()
@@ -313,7 +313,9 @@ class PIIDetector:
                         # Try to download
                         logger.info(f"Downloading spaCy model: {model_name}")
                         try:
-                            spacy.cli.download(model_name)
+                            from spacy.cli import download as spacy_download
+
+                            spacy_download(model_name)
                             self._spacy_models[lang] = spacy.load(model_name)
                         except Exception as e:
                             logger.warning(f"Failed to load {model_name}: {e}")
@@ -394,11 +396,11 @@ class PIIDetector:
             )
 
             for result in results:
-                pii_type = self._map_from_presidio(result.entity_type)
-                if pii_type:
+                mapped_type = self._map_from_presidio(result.entity_type)
+                if mapped_type:
                     entity = PIIEntity(
                         text=text[result.start : result.end],
-                        pii_type=pii_type,
+                        pii_type=mapped_type,
                         start=result.start,
                         end=result.end,
                         confidence=result.score,
@@ -413,7 +415,7 @@ class PIIDetector:
 
     def _detect_with_spacy(self, text: str, language: str) -> list[PIIEntity]:
         """Detect named entities using spaCy"""
-        entities = []
+        entities: list[PIIEntity] = []
 
         nlp = self._spacy_models.get(language)
         if not nlp:

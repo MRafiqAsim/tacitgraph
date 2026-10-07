@@ -22,7 +22,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import yaml
@@ -319,7 +319,7 @@ class EmailSensitivityClassifier:
                 signals={"override": f"sender_email={sender_email}", "forced": forced},
             )
 
-        signals = {}
+        signals: dict[str, Any] = {}
 
         # Signal 1: Subject patterns
         subject = headers.get("subject", "")
@@ -632,7 +632,7 @@ class LLMSensitivityClassifier:
                 from openai import AzureOpenAI
 
                 self.model = azure_deployment or model
-                self.client = AzureOpenAI(
+                self.client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=api_key,
                     azure_endpoint=azure_endpoint,
                     api_version=azure_api_version,
@@ -673,7 +673,7 @@ class LLMSensitivityClassifier:
         sender = headers.get("sender", "") or headers.get("sender_email", "")
         recipients_to = headers.get("recipients_to", [])
         recip_str = ", ".join(
-            r.get("name", r.get("email", "")) if isinstance(r, dict) else str(r)
+            cast(str, r.get("name", r.get("email", ""))) if isinstance(r, dict) else str(r)
             for r in recipients_to[:5]
         )
         folder = headers.get("folder_path", "")

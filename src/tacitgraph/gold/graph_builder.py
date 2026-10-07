@@ -369,7 +369,7 @@ class GraphBuilder:
         logger.info("Building knowledge graph from Silver chunks...")
 
         # Collect all chunk files
-        chunk_files = []
+        chunk_files: list[Path] = []
         for pattern in [
             "not_personal/email_chunks/*.json",
             "not_personal/attachment_chunks/*.json",

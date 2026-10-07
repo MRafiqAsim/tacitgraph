@@ -121,7 +121,7 @@ class SemanticChunker:
 
         # Initialize tokenizer
         try:
-            self.encoding = tiktoken.get_encoding(encoding_name)
+            self.encoding: tiktoken.Encoding | None = tiktoken.get_encoding(encoding_name)
         except Exception:
             # Fallback: approximate with word count
             self.encoding = None
@@ -291,7 +291,7 @@ class SemanticChunker:
         sentences = [s.strip() for s in sentences if s.strip()]
 
         chunks = []
-        current_chunk = []
+        current_chunk: list[str] = []
         current_tokens = 0
         current_start = 0
         char_pos = 0
@@ -322,7 +322,7 @@ class SemanticChunker:
                     chunks.append((chunk_text, current_start, char_pos))
 
                 # Start new chunk (with overlap)
-                overlap_sentences = []
+                overlap_sentences: list[str] = []
                 overlap_tokens = 0
 
                 for s in reversed(current_chunk):
@@ -361,7 +361,7 @@ class SemanticChunker:
         paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
         chunks = []
-        current_chunk = []
+        current_chunk: list[str] = []
         current_tokens = 0
         current_start = 0
         char_pos = 0
@@ -444,7 +444,7 @@ class SemanticChunker:
             # Split on separator
             parts = text.split(sep)
             chunks = []
-            current_chunk = []
+            current_chunk: list[str] = []
             current_tokens = 0
             current_start = start_offset
             char_pos = 0

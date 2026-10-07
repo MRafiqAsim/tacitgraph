@@ -165,7 +165,7 @@ def draw_sample_graph(gold_path: str, output_path: str, sample_size: int = 80):
     # Sample: take top node types, exclude CHUNK nodes (too many)
     priority_types = ["PERSON", "ORG", "GPE", "PRODUCT", "CONCEPT", "THREAD"]
     sampled_nodes = []
-    type_counts = defaultdict(int)
+    type_counts: defaultdict[str, int] = defaultdict(int)
     per_type_limit = max(5, sample_size // len(priority_types))
 
     for n in nodes:

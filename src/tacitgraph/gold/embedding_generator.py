@@ -283,7 +283,7 @@ class EmbeddingGenerator:
             raise ImportError("numpy is required for embedding storage")
 
         silver_dir = Path(silver_path)
-        chunk_files = []
+        chunk_files: list[Path] = []
 
         for pattern in [
             "not_personal/email_chunks/*.json",

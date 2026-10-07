@@ -237,6 +237,8 @@ def _worker_build_path(G_directed, nodes_data, path_nodes, min_path_weight):
 
 
 class PathIndexer:
+    _nx_graph: Any  # weighted graph, built lazily on first on-demand path search
+
     """
     Indexes reasoning paths through the knowledge graph for PathRAG.
 
@@ -439,7 +441,7 @@ class PathIndexer:
         G_undirected: Optional["nx.Graph"] = None,
     ) -> list[ReasoningPath]:
         """Find paths between two entities."""
-        paths = []
+        paths: list[ReasoningPath] = []
 
         if source_id not in G or target_id not in G:
             return paths

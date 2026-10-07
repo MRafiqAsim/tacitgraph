@@ -61,7 +61,7 @@ class OpenAIPIIDetector:
                 from openai import AzureOpenAI
 
                 self.model = azure_deployment or model
-                self.client = AzureOpenAI(
+                self.client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=api_key,
                     azure_endpoint=azure_endpoint,
                     api_version=azure_api_version,
@@ -283,7 +283,7 @@ class OpenAIAnonymizer:
                 from openai import AzureOpenAI
 
                 self.model = azure_deployment or model
-                self.client = AzureOpenAI(
+                self.client = AzureOpenAI(  # type: ignore[call-overload]  # SDK overloads don't cover this valid call
                     api_key=api_key,
                     azure_endpoint=azure_endpoint,
                     api_version=azure_api_version,

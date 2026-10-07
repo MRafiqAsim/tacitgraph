@@ -13,7 +13,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from .pii_detector import PIIDetector, PIIEntity, PIIType
 
@@ -152,7 +152,11 @@ class Anonymizer:
         # Apply replacements (from end to start to preserve positions)
         anonymized = text
         for entity in sorted(entities, key=lambda e: e.start, reverse=True):
-            anonymized = anonymized[: entity.start] + entity.replacement + anonymized[entity.end :]
+            anonymized = (
+                anonymized[: entity.start]
+                + cast(str, entity.replacement)  # assigned for every entity above
+                + anonymized[entity.end :]
+            )
 
         return AnonymizationResult(
             original_text=text,

@@ -23,6 +23,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Load .env before anything else
 from dotenv import load_dotenv
@@ -172,7 +173,7 @@ def cleanup_bronze_attachments(bronze_path: str) -> dict:
     logger.info(f"Cleaning up legacy attachment storage: {bronze_path}")
 
     processor = AttachmentProcessor(bronze_path=bronze_path)
-    stats = processor.cleanup_legacy_storage()
+    stats = processor.cleanup_legacy_storage()  # type: ignore[attr-defined]  # method no longer exists
 
     logger.info(f"Attachment cleanup complete: {stats}")
     return stats
@@ -202,7 +203,7 @@ def parse_documents_to_bronze(
 
     # Find documents
     docs_dir = Path(docs_path)
-    doc_files = []
+    doc_files: list[Path] = []
     for ext in extensions:
         doc_files.extend(docs_dir.rglob(f"*{ext}"))
 
@@ -357,7 +358,7 @@ def run_full_pipeline(
     """
     bronze_path = f"{output_path}/bronze"
 
-    all_stats = {
+    all_stats: dict[str, Any] = {
         "start_time": datetime.now().isoformat(),
         "bronze_stats": {},
         "silver_stats": {},

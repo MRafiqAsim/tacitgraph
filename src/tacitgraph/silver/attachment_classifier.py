@@ -78,7 +78,7 @@ class AttachmentClassifier:
         Returns:
             ClassificationResult with classification, confidence, signals.
         """
-        signals = {}
+        signals: dict[str, Any] = {}
 
         # Signal 1: Content patterns
         content_score, content_details = self._score_content(att_content.text, att_content.doc_type)

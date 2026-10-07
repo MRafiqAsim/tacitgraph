@@ -120,7 +120,7 @@ class CooccurrenceRelationshipExtractor(RelationshipExtractor):
         self, text: str, entities: list[KGEntity], language: str = "en"
     ) -> list[KGRelationship]:
         """Extract relationships based on co-occurrence in sentences"""
-        relationships = []
+        relationships: list[KGRelationship] = []
 
         if len(entities) < 2:
             return relationships
@@ -143,7 +143,7 @@ class CooccurrenceRelationshipExtractor(RelationshipExtractor):
                         entity_sentences[entity_key].add(j)
 
         # Find co-occurring entity pairs
-        seen_pairs: set[tuple[str, str]] = set()
+        seen_pairs: set[tuple[str, ...]] = set()
         {e.entity.lower(): e for e in entities}
 
         for e1 in entities:

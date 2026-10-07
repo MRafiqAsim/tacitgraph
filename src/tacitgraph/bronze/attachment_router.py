@@ -8,6 +8,7 @@ the appropriate extraction method (local parser vs OpenAI Vision).
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from .attachment_storage import AttachmentAnalysis
 
@@ -224,7 +225,8 @@ class AttachmentRouter:
                 except Exception:
                     pass
 
-            analysis.text_char_count = total_chars
+            # Not a declared AttachmentAnalysis field, so it is not persisted by asdict()
+            analysis.text_char_count = total_chars  # type: ignore[attr-defined]
             analysis.chars_per_page = total_chars / max(1, analysis.estimated_pages)
 
             # Check for embedded fonts (heuristic)
@@ -411,7 +413,12 @@ class AttachmentRouter:
         Returns:
             Dictionary with routing summary and details
         """
-        results = {"local_parser": [], "openai_vision": [], "unsupported": [], "errors": []}
+        results: dict[str, Any] = {
+            "local_parser": [],
+            "openai_vision": [],
+            "unsupported": [],
+            "errors": [],
+        }
 
         for file_path in file_paths:
             try:

@@ -192,7 +192,7 @@ class SummarizationEvaluator:
         self,
         source_texts: list[str],
         summaries: list[str],
-        reference_summaries: list[str] | None = None,
+        reference_summaries: list[str | None] | None = None,
     ) -> tuple[list[SummarizationMetrics], SummarizationMetrics]:
         """
         Evaluate multiple summaries and return individual + aggregate metrics.
@@ -290,6 +290,7 @@ class SummarizationEvaluator:
         """Calculate semantic similarity using embeddings"""
         try:
             # Get embeddings
+            assert self._openai_client is not None  # callers check the client first
             response = self._openai_client.embeddings.create(
                 model="text-embedding-3-small",
                 input=[source[:8000], summary],  # Truncate if too long
@@ -343,6 +344,7 @@ Return JSON only:
 {{"faithfulness": 0.X, "coverage": 0.X, "reasoning": "brief explanation"}}"""
 
         try:
+            assert self._openai_client is not None  # callers check the client first
             response = self._openai_client.chat.completions.create(
                 model=self.openai_model,
                 messages=[{"role": "user", "content": prompt}],
@@ -393,6 +395,7 @@ Return JSON only:
 {{"relevance": X, "coherence": X, "fluency": X, "overall": X}}"""
 
         try:
+            assert self._openai_client is not None  # callers check the client first
             response = self._openai_client.chat.completions.create(
                 model=self.openai_model,
                 messages=[{"role": "user", "content": prompt}],

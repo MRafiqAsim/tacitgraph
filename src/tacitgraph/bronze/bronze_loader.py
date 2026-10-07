@@ -79,7 +79,7 @@ class BronzeLayerLoader:
             self._create_directories()
 
         # Statistics
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "emails_loaded": 0,
             "documents_loaded": 0,
             "errors": 0,
@@ -115,6 +115,7 @@ class BronzeLayerLoader:
         """
         try:
             # Determine path based on date
+            year: int | str
             if email.sent_time:
                 year = email.sent_time.year
                 month = f"{email.sent_time.month:02d}"
@@ -148,7 +149,7 @@ class BronzeLayerLoader:
 
     def load_emails_batch(
         self, emails: Iterator[EmailMessage], batch_size: int = 100
-    ) -> dict[str, int]:
+    ) -> dict[str, Any]:
         """
         Load multiple emails in batches.
 
@@ -226,7 +227,7 @@ class BronzeLayerLoader:
 
     def load_documents_batch(
         self, documents: Iterator[ParsedDocument], batch_size: int = 50
-    ) -> dict[str, int]:
+    ) -> dict[str, Any]:
         """
         Load multiple documents in batches.
 

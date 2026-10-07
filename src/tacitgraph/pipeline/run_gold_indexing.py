@@ -12,6 +12,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -190,7 +191,7 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
     print()
 
     start_time = datetime.now()
-    stats = {"mode": mode_label}
+    stats: dict[str, Any] = {"mode": mode_label}
 
     # Determine what to run
     run_graph = args.all or (args.build_graph and not args.skip_graph)
@@ -252,13 +253,13 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
             logger.error("Knowledge graph required. Run with --build-graph or --skip-graph.")
             return stats
 
-        config = CommunityConfig(
+        community_config = CommunityConfig(
             resolution=args.community_resolution,
             num_levels=args.community_levels,
             use_llm_summarization=(mode_label != "local"),
         )
 
-        detector = CommunityDetector(knowledge_graph, str(gold_path), config)
+        detector = CommunityDetector(knowledge_graph, str(gold_path), community_config)
 
         def community_progress(current, total):
             print(f"  Progress: {current}/{total}...")
@@ -286,9 +287,9 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
             logger.error("Knowledge graph required. Run with --build-graph or --skip-graph.")
             return stats
 
-        config = PathIndexConfig(max_path_length=args.max_path_length, min_path_weight=0.3)
+        path_config = PathIndexConfig(max_path_length=args.max_path_length, min_path_weight=0.3)
 
-        indexer = PathIndexer(knowledge_graph, str(gold_path), config)
+        indexer = PathIndexer(knowledge_graph, str(gold_path), path_config)
 
         def path_progress(current, total):
             if current % 5000 == 0:
@@ -310,8 +311,8 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
         print("\n[4/4] Generating Embeddings...")
         print("-" * 40)
 
-        config = EmbeddingConfig(model=args.embedding_model)
-        generator = EmbeddingGenerator(str(gold_path), config, mode=mode_label)
+        embedding_config = EmbeddingConfig(model=args.embedding_model)
+        generator = EmbeddingGenerator(str(gold_path), embedding_config, mode=mode_label)
 
         if not generator.is_available():
             logger.warning("Embedding generation not available (no API key)")
@@ -344,8 +345,8 @@ def run_gold_indexing(args, mode_label: str, silver_path: Path, gold_path: Path)
         print("\n[5] Embedding Community Summaries...")
         print("-" * 40)
 
-        config = EmbeddingConfig(model=args.embedding_model)
-        generator = EmbeddingGenerator(str(gold_path), config, mode=mode_label)
+        embedding_config = EmbeddingConfig(model=args.embedding_model)
+        generator = EmbeddingGenerator(str(gold_path), embedding_config, mode=mode_label)
 
         if not generator.is_available():
             logger.warning("Embedding generation not available (no API key)")

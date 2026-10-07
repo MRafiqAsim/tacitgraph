@@ -394,7 +394,7 @@ class AnonymizationEvaluator:
         Returns:
             Complete evaluation report as dict
         """
-        report = {
+        report: dict[str, Any] = {
             "silver_path": silver_path,
         }
 

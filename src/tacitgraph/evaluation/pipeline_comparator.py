@@ -311,7 +311,7 @@ class PipelineComparator:
         if not self.mode_metrics:
             self.collect_all_metrics()
 
-        report = {
+        report: dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "modes_compared": list(self.mode_metrics.keys()),
             "mode_summaries": {

@@ -19,6 +19,7 @@ Metrics:
 
 import logging
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -75,7 +76,7 @@ class AggregatedComparison:
     total_questions: int
     by_system: dict[SystemType, dict[str, float]]
     by_question_type: dict[str, dict[SystemType, dict[str, float]]]
-    statistical_significance: dict[tuple[SystemType, SystemType], dict[str, float]]
+    statistical_significance: dict[tuple[SystemType, SystemType], dict[str, dict[str, Any]]]
     recommendations: list[str]
     generated_at: str
 
@@ -184,7 +185,9 @@ class ComparativeAnalyzer:
             AggregatedComparison with statistics
         """
         # Aggregate by system
-        by_system = defaultdict(lambda: defaultdict(list))
+        by_system: defaultdict[SystemType, defaultdict[str, list[float]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
 
         for comp in comparisons:
             for system_type, scores in comp.ragas_scores.items():
@@ -199,14 +202,16 @@ class ComparativeAnalyzer:
         by_system_means = {}
         for system_type, metrics in by_system.items():
             by_system_means[system_type] = {
-                metric: np.mean(values) for metric, values in metrics.items()
+                metric: float(np.mean(values)) for metric, values in metrics.items()
             }
             # Add standard deviations
             for metric, values in metrics.items():
-                by_system_means[system_type][f"{metric}_std"] = np.std(values)
+                by_system_means[system_type][f"{metric}_std"] = float(np.std(values))
 
         # Aggregate by question type
-        by_question_type = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        by_question_type: defaultdict[
+            str, defaultdict[SystemType, defaultdict[str, list[float]]]
+        ] = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
         for comp in comparisons:
             qtype = comp.question_type
@@ -214,12 +219,12 @@ class ComparativeAnalyzer:
                 for metric, value in scores.items():
                     by_question_type[qtype][system_type][metric].append(value)
 
-        by_question_type_means = {}
+        by_question_type_means: dict[str, dict[SystemType, dict[str, float]]] = {}
         for qtype, systems in by_question_type.items():
             by_question_type_means[qtype] = {}
             for system_type, metrics in systems.items():
                 by_question_type_means[qtype][system_type] = {
-                    metric: np.mean(values) for metric, values in metrics.items()
+                    metric: float(np.mean(values)) for metric, values in metrics.items()
                 }
 
         # Statistical significance tests
@@ -260,7 +265,7 @@ class ComparativeAnalyzer:
             )
             composite_scores[system_type] = composite
 
-        return max(composite_scores, key=composite_scores.get)
+        return max(composite_scores, key=lambda s: composite_scores[s])
 
     def _generate_analysis(
         self,
@@ -291,23 +296,23 @@ class ComparativeAnalyzer:
         # Efficiency comparison
         latencies = {sys: res.latency_ms for sys, res in system_results.items()}
         if latencies:
-            fastest = min(latencies, key=latencies.get)
+            fastest = min(latencies, key=lambda s: latencies[s])
             analysis_parts.append(f"Fastest: {fastest.value} ({latencies[fastest]:.0f}ms)")
 
         return " | ".join(analysis_parts)
 
     def _calculate_significance(
-        self, by_system: dict[SystemType, dict[str, list[float]]]
-    ) -> dict[tuple[SystemType, SystemType], dict[str, float]]:
+        self, by_system: Mapping[SystemType, Mapping[str, list[float]]]
+    ) -> dict[tuple[SystemType, SystemType], dict[str, dict[str, Any]]]:
         """Calculate statistical significance between system pairs."""
         from scipy import stats
 
-        significance = {}
+        significance: dict[tuple[SystemType, SystemType], dict[str, dict[str, Any]]] = {}
         systems = list(by_system.keys())
 
         for i, sys1 in enumerate(systems):
             for sys2 in systems[i + 1 :]:
-                pair_significance = {}
+                pair_significance: dict[str, dict[str, Any]] = {}
 
                 for metric in [
                     "faithfulness",
@@ -359,7 +364,7 @@ class ComparativeAnalyzer:
                 ]
             )
 
-        overall_best = max(composite_scores, key=composite_scores.get)
+        overall_best = max(composite_scores, key=lambda s: composite_scores[s])
         recommendations.append(
             f"Overall best system: {overall_best.value} (composite: {composite_scores[overall_best]:.3f})"
         )
@@ -373,7 +378,7 @@ class ComparativeAnalyzer:
                         [metrics.get("faithfulness", 0), metrics.get("answer_relevancy", 0)]
                     )
                 if qtype_composite:
-                    best_for_type = max(qtype_composite, key=qtype_composite.get)
+                    best_for_type = max(qtype_composite, key=lambda s: qtype_composite[s])
                     recommendations.append(f"Best for {qtype}: {best_for_type.value}")
 
         # Efficiency vs quality trade-off

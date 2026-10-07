@@ -98,7 +98,7 @@ class CosmosAdapter:
             logger.info(f"Gremlin client connected: {self.gremlin_endpoint}")
         return self._gremlin_client
 
-    def _gremlin_query(self, query: str) -> list[dict]:
+    def _gremlin_query(self, query: str) -> list[Any]:
         """Execute a Gremlin query and return results."""
         try:
             import nest_asyncio

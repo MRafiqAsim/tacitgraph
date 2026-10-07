@@ -169,54 +169,17 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 check_untyped_defs = false
 
+
+
 # Typing ratchet: modules below still have mypy errors and are being annotated
 # incrementally. Remove a module once it type-checks cleanly; CI keeps every
 # other module error-free.
 [[tool.mypy.overrides]]
 module = [
-    "tacitgraph.app",
-    "tacitgraph.bronze.attachment_processor",
-    "tacitgraph.bronze.attachment_router",
-    "tacitgraph.bronze.attachment_storage",
-    "tacitgraph.bronze.bronze_loader",
-    "tacitgraph.bronze.document_parser",
-    "tacitgraph.bronze.pst_extractor",
-    "tacitgraph.evaluation.anonymization_evaluator",
-    "tacitgraph.evaluation.comparative_analysis",
-    "tacitgraph.evaluation.pipeline_comparator",
-    "tacitgraph.evaluation.ragas_evaluator",
-    "tacitgraph.evaluation.summarization_metrics",
-    "tacitgraph.gold.community_detector",
-    "tacitgraph.gold.embedding_generator",
-    "tacitgraph.gold.graph_builder",
-    "tacitgraph.gold.path_indexer",
-    "tacitgraph.pipeline.evaluate_privacy",
-    "tacitgraph.pipeline.evaluate_quality",
-    "tacitgraph.pipeline.run_build_catalog",
-    "tacitgraph.pipeline.run_gold_indexing",
-    "tacitgraph.pipeline.run_ingestion",
-    "tacitgraph.pipeline.visualize_graph",
     "tacitgraph.retrieval.hybrid_retriever",
-    "tacitgraph.retrieval.pathrag_retriever",
-    "tacitgraph.retrieval.react_retriever",
     "tacitgraph.retrieval.retrieval_tools",
     "tacitgraph.retrieval.vector_search",
-    "tacitgraph.settings",
-    "tacitgraph.silver.anonymizer",
-    "tacitgraph.silver.attachment_classifier",
-    "tacitgraph.silver.chunker",
-    "tacitgraph.silver.email_sensitivity_classifier",
-    "tacitgraph.silver.identity_registry",
-    "tacitgraph.silver.kg_entity_extractor",
-    "tacitgraph.silver.openai_pii_detector",
-    "tacitgraph.silver.openai_vision_extractor",
-    "tacitgraph.silver.pii_detector",
-    "tacitgraph.silver.privacy_metrics",
-    "tacitgraph.silver.relationship_extractor",
-    "tacitgraph.silver.silver_processor",
     "tacitgraph.silver.thread_aware_processor",
-    "tacitgraph.silver.unified_processor",
-    "tacitgraph.storage.cosmos_adapter",
 ]
 ignore_errors = true
 

@@ -189,7 +189,7 @@ class PipelineConfig:
         )
 
     @classmethod
-    def load_from_file(cls, path: str) -> "PipelineConfig":
+    def load_from_file(cls, path: str | Path) -> "PipelineConfig":
         """Load configuration from YAML or JSON file"""
         import json
 
@@ -222,7 +222,7 @@ class PipelineConfig:
 
         return cls(**data)
 
-    def save_to_file(self, path: str) -> None:
+    def save_to_file(self, path: str | Path) -> None:
         """Save configuration to file"""
         import json
 

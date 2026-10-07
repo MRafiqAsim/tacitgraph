@@ -115,7 +115,7 @@ class CommunityDetector:
         self.communities: dict[int, dict[str, Community]] = defaultdict(dict)
 
         # LLM client for summarization
-        self.llm_client = None
+        self.llm_client: Any = None  # OpenAI or AzureOpenAI client
         if self.config.use_llm_summarization:
             self._initialize_llm()
 

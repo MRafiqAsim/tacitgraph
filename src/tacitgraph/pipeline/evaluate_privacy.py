@@ -74,7 +74,7 @@ def chunks_to_anonymized_records(chunks: list[dict[str, Any]]) -> list[Anonymize
     Returns:
         List of AnonymizedRecord objects
     """
-    records = []
+    records: list[AnonymizedRecord] = []
 
     for chunk in chunks:
         # Extract quasi-identifiers from chunk metadata
@@ -159,7 +159,7 @@ def evaluate_silver_layer(
     risk_threshold: float = 0.1,
     cdr_threshold: float = 0.5,
     output_path: str | None = None,
-) -> PrivacyMetricsResult:
+) -> PrivacyMetricsResult | None:
     """
     Evaluate privacy metrics for Silver layer data.
 

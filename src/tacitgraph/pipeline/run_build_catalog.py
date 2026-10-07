@@ -15,6 +15,7 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 # Add project paths
 
@@ -25,14 +26,14 @@ logger = logging.getLogger(__name__)
 def build_catalog(silver_path: str) -> dict:
     """Scan Silver chunks and build entity catalog."""
     silver = Path(silver_path)
-    chunk_files = []
+    chunk_files: list[Path] = []
     for pattern in ["not_personal/email_chunks/*.json", "not_personal/attachment_chunks/*.json"]:
         chunk_files.extend(silver.glob(pattern))
 
     logger.info(f"Scanning {len(chunk_files)} chunk files...")
 
     # Collect entities: name -> {type, aliases, mention_count, chunks}
-    entities = defaultdict(
+    entities: defaultdict[str, dict[str, Any]] = defaultdict(
         lambda: {
             "type": "UNKNOWN",
             "aliases": set(),
@@ -68,7 +69,7 @@ def build_catalog(silver_path: str) -> dict:
             logger.warning(f"Error reading {chunk_file.name}: {e}")
 
     # Convert sets to sorted lists and limit source_chunks
-    catalog = {"entities": {}, "metadata": {}}
+    catalog: dict[str, Any] = {"entities": {}, "metadata": {}}
     for name, info in sorted(entities.items(), key=lambda x: -x[1]["mention_count"]):
         catalog["entities"][name] = {
             "standard_name": name,

@@ -314,9 +314,9 @@ class AttachmentStorage:
         """Get all attachments for an email."""
         attachment_ids = self.index.by_email.get(email_id, [])
         return [
-            self.get_attachment_metadata(att_id)
+            metadata
             for att_id in attachment_ids
-            if self.get_attachment_metadata(att_id) is not None
+            if (metadata := self.get_attachment_metadata(att_id)) is not None
         ]
 
     def get_attachments_by_type(self, content_type: str) -> list[str]:

@@ -132,7 +132,7 @@ class SilverLayerProcessor:
         self._create_directories()
 
         # Statistics
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "documents_processed": 0,
             "chunks_created": 0,
             "pii_detected": 0,

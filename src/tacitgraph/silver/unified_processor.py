@@ -73,11 +73,11 @@ class UnifiedProcessor:
         """
         self.config = config or get_config()
         self.identity_registry = identity_registry
-        self._local_detector = None
-        self._local_anonymizer = None
-        self._openai_detector = None
-        self._openai_anonymizer = None
-        self._openai_summarizer = None
+        self._local_detector: Any = None
+        self._local_anonymizer: Any = None
+        self._openai_detector: Any = None
+        self._openai_anonymizer: Any = None
+        self._openai_summarizer: Any = None
 
         self._initialize_components()
 
@@ -402,7 +402,7 @@ class UnifiedProcessor:
 
         sorted_entities = sorted(entities, key=lambda e: (e.start, -e.confidence))
 
-        result = []
+        result: list[PIIEntity] = []
         for entity in sorted_entities:
             overlap = False
             for existing in result:

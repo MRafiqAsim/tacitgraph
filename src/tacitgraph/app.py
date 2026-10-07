@@ -19,6 +19,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 import tiktoken
 from dotenv import load_dotenv
@@ -79,7 +80,7 @@ def count_tokens(text: str) -> int:
     return len(_enc.encode(text))
 
 
-def build_history_text(conv_state: list[dict[str, str]]) -> str:
+def build_history_text(conv_state: list[dict[str, Any]]) -> str:
     """Build a formatted history string from conversation state."""
     lines = []
     summary = conv_state[0].get("_compaction_summary", "") if conv_state else ""
@@ -96,12 +97,12 @@ def build_history_text(conv_state: list[dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
-def history_token_count(conv_state: list[dict[str, str]]) -> int:
+def history_token_count(conv_state: list[dict[str, Any]]) -> int:
     """Count total tokens in conversation history."""
     return count_tokens(build_history_text(conv_state))
 
 
-def compact_history(conv_state: list[dict[str, str]]) -> tuple[list[dict[str, str]], bool]:
+def compact_history(conv_state: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
     """
     Gradually compact conversation history — only summarize the oldest batch
     of turns needed to get back under the token threshold.
@@ -175,7 +176,7 @@ def compact_history(conv_state: list[dict[str, str]]) -> tuple[list[dict[str, st
     return new_state, True
 
 
-def maybe_compact(conv_state: list[dict[str, str]]) -> tuple[list[dict[str, str]], bool]:
+def maybe_compact(conv_state: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
     """Check token budget and compact if needed. Returns (state, was_compacted)."""
     hist_tokens = history_token_count(conv_state)
     available = CONTEXT_BUDGET - FIXED_OVERHEAD_ESTIMATE
@@ -528,7 +529,7 @@ def format_sources_compact(result: RetrievalResult) -> str:
 def chat_respond(
     message: str,
     chat_history: list[dict[str, str]],
-    conv_state: list[dict[str, str]],
+    conv_state: list[dict[str, Any]],
     strategy_label: str,
     top_k: int,
 ):

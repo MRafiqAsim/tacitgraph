@@ -193,7 +193,7 @@ class ReActRetriever:
 
         lines = response_text.strip().split("\n")
         current_section = None
-        current_content = []
+        current_content: list[str] = []
 
         for line in lines:
             line_upper = line.upper().strip()

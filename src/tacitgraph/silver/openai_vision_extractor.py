@@ -112,7 +112,7 @@ class OpenAIVisionExtractor:
             config: Vision API configuration
         """
         self.config = config or VisionConfig.from_env()
-        self.client = None
+        self.client: Any = None
         self.use_azure = False
         self._initialize_client()
 
@@ -316,7 +316,7 @@ class OpenAIVisionExtractor:
                 dpi=150,  # Balance quality vs size
                 fmt="png",
                 first_page=1,
-                last_page=max_pages,
+                last_page=max_pages,  # type: ignore[arg-type]  # pdf2image accepts None (= all pages)
             )
 
             for page in pages:

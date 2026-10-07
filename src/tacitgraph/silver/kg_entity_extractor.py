@@ -172,7 +172,7 @@ class SpaCyKGExtractor(KGEntityExtractor):
 
     def extract(self, text: str, language: str = "en") -> list[KGEntity]:
         """Extract KG entities using spaCy NER"""
-        entities = []
+        entities: list[KGEntity] = []
 
         # Get model for language (fallback to English)
         nlp = self.models.get(language) or self.models.get("en")
@@ -379,18 +379,18 @@ class LLMKGExtractor(KGEntityExtractor):
             # Accept all LLM-extracted entities without filtering.
             # Type normalization happens in the Gold layer (graph builder).
             entities = []
-            for e in raw_entities:
-                raw_type = e.get("type", "UNKNOWN").upper()
+            for raw_entity in raw_entities:
+                raw_type = raw_entity.get("type", "UNKNOWN").upper()
                 entities.append(
                     KGEntity(
-                        entity=e.get("entity") or e.get("text", ""),
+                        entity=raw_entity.get("entity") or raw_entity.get("text", ""),
                         entity_type=raw_type,
-                        start=e.get("start", 0),
-                        end=e.get("end", 0),
+                        start=raw_entity.get("start", 0),
+                        end=raw_entity.get("end", 0),
                         confidence=0.95,
                         source="llm",
                         is_pii=raw_type in PATHRAG_PII_ENTITY_TYPES,
-                        aliases=e.get("aliases", []),
+                        aliases=raw_entity.get("aliases", []),
                     )
                 )
             return entities

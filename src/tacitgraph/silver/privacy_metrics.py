@@ -769,7 +769,7 @@ class TextPrivacyAnalyzer:
         self,
         original_texts: list[str],
         anonymized_texts: list[str],
-        quasi_identifier_extractors: dict[str, callable] | None = None,
+        quasi_identifier_extractors: dict[str, Callable[..., Any]] | None = None,
         sensitive_attribute_extractor: Callable[..., Any] | None = None,
     ) -> PrivacyMetricsResult:
         """
@@ -811,7 +811,7 @@ class TextPrivacyAnalyzer:
         return self.calculator.calculate_all_metrics(records, sensitive_attr_name)
 
     def _extract_quasi_identifiers(
-        self, text: str, extractors: dict[str, callable] | None = None
+        self, text: str, extractors: dict[str, Callable[..., Any]] | None = None
     ) -> list[QuasiIdentifier]:
         """Extract quasi-identifiers from text"""
         qis = []

@@ -61,8 +61,8 @@ class EmailMessage:
     subject: str
     sender: str
     sender_email: str
-    recipients_to: list[str] = field(default_factory=list)
-    recipients_cc: list[str] = field(default_factory=list)
+    recipients_to: list[dict[str, str]] = field(default_factory=list)  # [{"name", "email"}]
+    recipients_cc: list[dict[str, str]] = field(default_factory=list)
     recipients_bcc: list[str] = field(default_factory=list)
 
     # Timestamps
@@ -223,7 +223,7 @@ class PSTExtractor:
         ]
 
         # Extraction limits
-        self.max_emails = None  # Set during extract()
+        self.max_emails: int | None = None  # Set during extract()
 
         # Statistics
         self.stats = {
@@ -236,7 +236,7 @@ class PSTExtractor:
 
     def extract(
         self,
-        pst_path: str,
+        pst_path: str | Path,
         progress_callback: Callable[[int, str], None] | None = None,
         max_emails: int | None = None,
     ) -> Iterator[EmailMessage]:
@@ -359,7 +359,7 @@ class PSTExtractor:
         Returns:
             Dict with parsed header fields
         """
-        result = {
+        result: dict[str, Any] = {
             "sender_name": "",
             "sender_email": "",
             "recipients_to": [],
@@ -584,6 +584,7 @@ class PSTExtractor:
         if body is None:
             return ""
 
+        text: str | None
         if isinstance(body, str):
             text = body
         elif isinstance(body, bytes):
@@ -631,7 +632,7 @@ class PSTExtractor:
 
     def _extract_attachments_pypff(self, message) -> list[Attachment]:
         """Extract attachments from pypff message"""
-        attachments = []
+        attachments: list[Attachment] = []
 
         try:
             num_attachments = message.number_of_attachments
