@@ -8,9 +8,8 @@ Usage:
 
 import argparse
 import json
-import os
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
 
 def main():
@@ -47,20 +46,22 @@ def main():
                     top_entities[ntype] = []
                 top_entities[ntype].append((name, mention_count))
 
-        print(f"\n--- Knowledge Graph ---")
+        print("\n--- Knowledge Graph ---")
         print(f"  Total nodes:                  {len(nodes)}")
 
-        print(f"\n  Node types:")
+        print("\n  Node types:")
         for ntype, count in node_types.most_common():
             print(f"    {ntype:25s} {count}")
 
         # Top entities per type — sorted by total mentions descending, show only main types
-        print(f"\n--- Top Entities by Type (top 10 types) ---")
+        print("\n--- Top Entities by Type (top 10 types) ---")
         type_total_mentions = {}
         for ntype, ents in top_entities.items():
             type_total_mentions[ntype] = sum(m for _, m in ents)
 
-        sorted_types = sorted(type_total_mentions.keys(), key=lambda t: type_total_mentions[t], reverse=True)
+        sorted_types = sorted(
+            type_total_mentions.keys(), key=lambda t: type_total_mentions[t], reverse=True
+        )
 
         for ntype in sorted_types[:10]:
             entities = sorted(top_entities[ntype], key=lambda x: x[1], reverse=True)[:5]
@@ -90,9 +91,9 @@ def main():
                 etype = "UNKNOWN"
             edge_types[etype] += 1
 
-        print(f"\n--- Edges ---")
+        print("\n--- Edges ---")
         print(f"  Total edges:                  {len(edges)}")
-        print(f"\n  Edge types:")
+        print("\n  Edge types:")
         for etype, count in edge_types.most_common():
             print(f"    {etype:25s} {count}")
 
@@ -101,7 +102,7 @@ def main():
     # ============================================================
     communities_dir = gold / "communities"
     if communities_dir.exists():
-        print(f"\n--- Communities ---")
+        print("\n--- Communities ---")
         total_communities = 0
         for level_dir in sorted(communities_dir.iterdir()):
             if level_dir.is_dir() and level_dir.name.startswith("level_"):
@@ -125,11 +126,13 @@ def main():
                 avg_size = sum(sizes) // len(sizes) if sizes else 0
                 max_size = max(sizes) if sizes else 0
                 min_size = min(sizes) if sizes else 0
-                print(f"  {level}: {len(comm_files)} communities (avg {avg_size} nodes, min {min_size}, max {max_size}, {has_summary} summarized)")
+                print(
+                    f"  {level}: {len(comm_files)} communities (avg {avg_size} nodes, min {min_size}, max {max_size}, {has_summary} summarized)"
+                )
 
         print(f"  Total communities:            {total_communities}")
     else:
-        print(f"\n  Communities directory not found")
+        print("\n  Communities directory not found")
 
     # ============================================================
     # PATHS
@@ -155,30 +158,30 @@ def main():
                 path_types[f"{src_type} → {tgt_type}"] += 1
                 path_lengths[len(p.get("path_nodes", []))] += 1
 
-            print(f"\n--- Path Index ---")
+            print("\n--- Path Index ---")
             print(f"  Total paths:                  {len(paths)}")
 
-            print(f"\n  Path type pairs:")
+            print("\n  Path type pairs:")
             for ptype, count in path_types.most_common(15):
                 print(f"    {ptype:30s} {count}")
 
-            print(f"\n  Path lengths (hops):")
+            print("\n  Path lengths (hops):")
             for length, count in sorted(path_lengths.items()):
                 print(f"    {length} hops: {count}")
         else:
             # Check for individual path files
             path_files = list(paths_dir.glob("*.json"))
-            print(f"\n--- Path Index ---")
+            print("\n--- Path Index ---")
             print(f"  Path files:                   {len(path_files)}")
     else:
-        print(f"\n  Path index not found")
+        print("\n  Path index not found")
 
     # ============================================================
     # EMBEDDINGS
     # ============================================================
     emb_dir = gold / "embeddings"
     if emb_dir.exists():
-        print(f"\n--- Embeddings ---")
+        print("\n--- Embeddings ---")
 
         # Check for .npy + _ids.json format
         for ids_file in sorted(emb_dir.glob("*_ids.json")):
@@ -190,6 +193,7 @@ def main():
                     ids = json.load(f)
                 if emb_file.exists():
                     import numpy as np
+
                     embeddings = np.load(emb_file)
                     dim = embeddings.shape[1] if len(embeddings.shape) > 1 else 0
                     size_mb = emb_file.stat().st_size / (1024 * 1024)
@@ -203,6 +207,7 @@ def main():
         for emb_file in sorted(emb_dir.glob("*.npz")):
             try:
                 import numpy as np
+
                 data = np.load(emb_file, allow_pickle=True)
                 ids = data.get("ids", [])
                 embeddings = data.get("embeddings", [])
@@ -213,9 +218,9 @@ def main():
                 print(f"  {emb_file.name:25s} {size_mb:.1f} MB")
 
         if not list(emb_dir.glob("*_ids.json")) and not list(emb_dir.glob("*.npz")):
-            print(f"  No embedding files found")
+            print("  No embedding files found")
     else:
-        print(f"\n  Embeddings directory not found")
+        print("\n  Embeddings directory not found")
 
     # ============================================================
     # ENTITY CATALOG
@@ -233,15 +238,15 @@ def main():
             if info.get("aliases"):
                 has_aliases += 1
 
-        print(f"\n--- Entity Catalog ---")
+        print("\n--- Entity Catalog ---")
         print(f"  Total catalog entries:        {len(entities)}")
         print(f"  Entries with aliases:         {has_aliases}")
 
-        print(f"\n  Catalog entity types:")
+        print("\n  Catalog entity types:")
         for ctype, count in catalog_types.most_common():
             print(f"    {ctype:25s} {count}")
     else:
-        print(f"\n  Entity catalog not found")
+        print("\n  Entity catalog not found")
 
     # ============================================================
     # GRAPH STATS FILE
@@ -250,7 +255,7 @@ def main():
     if stats_file.exists():
         with open(stats_file) as f:
             stats = json.load(f)
-        print(f"\n--- Processing Info ---")
+        print("\n--- Processing Info ---")
         print(f"  Timestamp:                    {stats.get('timestamp', 'unknown')}")
         print(f"  Mode:                         {stats.get('mode', 'unknown')}")
 

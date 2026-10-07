@@ -14,9 +14,8 @@ Usage:
 import argparse
 import asyncio
 import json
-import os
-import sys
 import logging
+import os
 from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -40,6 +39,7 @@ def load_expert_qa(path: str) -> list[dict]:
 def _build_ragas_scorers():
     """Build RAGAS metric scorers with Azure OpenAI."""
     import warnings
+
     warnings.filterwarnings("ignore", category=DeprecationWarning, module="ragas")
 
     azure_endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
@@ -49,8 +49,8 @@ def _build_ragas_scorers():
     emb_deployment = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small")
 
     from openai import AsyncAzureOpenAI
-    from ragas.llms import llm_factory
     from ragas.embeddings.base import embedding_factory
+    from ragas.llms import llm_factory
 
     client = AsyncAzureOpenAI(
         azure_endpoint=azure_endpoint,
@@ -62,15 +62,24 @@ def _build_ragas_scorers():
     ragas_embeddings = embedding_factory(provider="openai", model=emb_deployment, client=client)
 
     # Patch embed_query onto RAGAS embeddings (AnswerRelevancy expects langchain interface)
-    if not hasattr(ragas_embeddings, 'embed_query'):
+    if not hasattr(ragas_embeddings, "embed_query"):
         ragas_embeddings.embed_query = ragas_embeddings.embed_text
-    if not hasattr(ragas_embeddings, 'embed_documents'):
+    if not hasattr(ragas_embeddings, "embed_documents"):
         ragas_embeddings.embed_documents = ragas_embeddings.embed_texts
 
-    from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall, AnswerCorrectness
+    from ragas.metrics import (
+        AnswerCorrectness,
+        AnswerRelevancy,
+        ContextPrecision,
+        ContextRecall,
+        Faithfulness,
+    )
     from ragas.metrics._answer_similarity import AnswerSimilarity
+
     answer_sim = AnswerSimilarity(embeddings=ragas_embeddings)
-    answer_correct = AnswerCorrectness(llm=llm, embeddings=ragas_embeddings, answer_similarity=answer_sim)
+    answer_correct = AnswerCorrectness(
+        llm=llm, embeddings=ragas_embeddings, answer_similarity=answer_sim
+    )
 
     scorers = {
         "faithfulness": Faithfulness(llm=llm),
@@ -96,7 +105,13 @@ async def _score_single(scorers, question, answer, contexts, ground_truth):
     )
 
     scores = {}
-    metric_names_list = ["faithfulness", "answer_relevancy", "context_precision", "context_recall", "answer_correctness"]
+    metric_names_list = [
+        "faithfulness",
+        "answer_relevancy",
+        "context_precision",
+        "context_recall",
+        "answer_correctness",
+    ]
 
     for mname in metric_names_list:
         scorer = scorers[mname]
@@ -115,7 +130,13 @@ async def _run_ragas_scoring_async(all_results, args):
     logger.info("Building RAGAS scorers...")
     scorers = _build_ragas_scorers()
 
-    metric_names = ["faithfulness", "answer_relevancy", "context_precision", "context_recall", "answer_correctness"]
+    metric_names = [
+        "faithfulness",
+        "answer_relevancy",
+        "context_precision",
+        "context_recall",
+        "answer_correctness",
+    ]
     strategies_evaluated = sorted(set(r["strategy"] for r in all_results))
     ragas_scores = {}
 
@@ -125,7 +146,7 @@ async def _run_ragas_scoring_async(all_results, args):
 
         per_question_scores = []
         for i, r in enumerate(strategy_results):
-            logger.info(f"    Q{i+1}: {r['question'][:60]}...")
+            logger.info(f"    Q{i + 1}: {r['question'][:60]}...")
             ctx = r.get("contexts", [])
             if not ctx:
                 ctx = ["No context retrieved."]
@@ -133,7 +154,9 @@ async def _run_ragas_scoring_async(all_results, args):
             if not ctx:
                 ctx = ["No context retrieved."]
 
-            scores = await _score_single(scorers, r["question"], r["answer"], ctx, r["ground_truth"])
+            scores = await _score_single(
+                scorers, r["question"], r["answer"], ctx, r["ground_truth"]
+            )
             per_question_scores.append(scores)
             logger.info(f"      {scores}")
 
@@ -171,25 +194,31 @@ async def _run_ragas_scoring_async(all_results, args):
     logger.info(f"\nResults saved to {args.output}")
 
     # Print table
-    print(f"\n{'='*90}")
-    print(f"RAGAS EVALUATION RESULTS")
-    print(f"{'='*90}")
-    print(f"{'Strategy':<12} {'Faithful':>10} {'Relevancy':>10} {'Precision':>10} {'Recall':>10} {'Correct':>10} {'Time(s)':>8} {'Chunks':>7}")
-    print(f"{'-'*12} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*8} {'-'*7}")
+    print(f"\n{'=' * 90}")
+    print("RAGAS EVALUATION RESULTS")
+    print(f"{'=' * 90}")
+    print(
+        f"{'Strategy':<12} {'Faithful':>10} {'Relevancy':>10} {'Precision':>10} {'Recall':>10} {'Correct':>10} {'Time(s)':>8} {'Chunks':>7}"
+    )
+    print(f"{'-' * 12} {'-' * 10} {'-' * 10} {'-' * 10} {'-' * 10} {'-' * 10} {'-' * 8} {'-' * 7}")
 
     for sn in strategies_evaluated:
         s = ragas_scores.get(sn, {})
         if "error" in s:
             print(f"{sn:<12} {'ERROR':>10}")
             continue
-        f_val = f"{s['faithfulness']:.4f}" if s.get('faithfulness') is not None else "--"
-        r_val = f"{s['answer_relevancy']:.4f}" if s.get('answer_relevancy') is not None else "--"
-        p_val = f"{s['context_precision']:.4f}" if s.get('context_precision') is not None else "--"
-        c_val = f"{s['context_recall']:.4f}" if s.get('context_recall') is not None else "--"
-        a_val = f"{s['answer_correctness']:.4f}" if s.get('answer_correctness') is not None else "--"
-        print(f"{sn:<12} {f_val:>10} {r_val:>10} {p_val:>10} {c_val:>10} {a_val:>10} {s.get('avg_execution_time','--'):>8} {s.get('avg_chunks','--'):>7}")
+        f_val = f"{s['faithfulness']:.4f}" if s.get("faithfulness") is not None else "--"
+        r_val = f"{s['answer_relevancy']:.4f}" if s.get("answer_relevancy") is not None else "--"
+        p_val = f"{s['context_precision']:.4f}" if s.get("context_precision") is not None else "--"
+        c_val = f"{s['context_recall']:.4f}" if s.get("context_recall") is not None else "--"
+        a_val = (
+            f"{s['answer_correctness']:.4f}" if s.get("answer_correctness") is not None else "--"
+        )
+        print(
+            f"{sn:<12} {f_val:>10} {r_val:>10} {p_val:>10} {c_val:>10} {a_val:>10} {s.get('avg_execution_time', '--'):>8} {s.get('avg_chunks', '--'):>7}"
+        )
 
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
 
 def main():
@@ -198,24 +227,29 @@ def main():
     parser.add_argument("--silver", default="", help="Path to Silver layer")
     parser.add_argument("--mode", default="llm", help="Processing mode")
     parser.add_argument("--output", default="ragas_results.json", help="Output file")
-    parser.add_argument("--strategies", nargs="*",
-                        default=["vector", "pathrag", "graphrag", "hybrid", "react"],
-                        help="Strategies to evaluate")
-    parser.add_argument("--qa-file", default=DEFAULT_QA_FILE,
-                        help="JSON file with expert question/ground_truth pairs")
-    parser.add_argument("--score-only", type=str, default="",
-                        help="Path to existing results JSON — skip retrieval")
+    parser.add_argument(
+        "--strategies",
+        nargs="*",
+        default=["vector", "pathrag", "graphrag", "hybrid", "react"],
+        help="Strategies to evaluate",
+    )
+    parser.add_argument(
+        "--qa-file",
+        default=DEFAULT_QA_FILE,
+        help="JSON file with expert question/ground_truth pairs",
+    )
+    parser.add_argument(
+        "--score-only", type=str, default="", help="Path to existing results JSON — skip retrieval"
+    )
     args = parser.parse_args()
 
-    sys.path.insert(0, "src")
-    sys.path.insert(0, "config")
-
     from dotenv import load_dotenv
+
     load_dotenv()
 
     if args.score_only:
         logger.info(f"Score-only mode: loading from {args.score_only}")
-        with open(args.score_only, "r", encoding="utf-8") as f:
+        with open(args.score_only, encoding="utf-8") as f:
             existing = json.load(f)
         all_results = existing.get("detailed_results", [])
         if not all_results:
@@ -228,7 +262,8 @@ def main():
         logger.error("--gold and --silver required (or use --score-only)")
         return
 
-    from retrieval import HybridRetriever, RetrievalStrategy
+    from tacitgraph.retrieval import HybridRetriever, RetrievalStrategy
+
     strategy_map = {
         "vector": RetrievalStrategy.VECTOR,
         "pathrag": RetrievalStrategy.PATHRAG,
@@ -237,7 +272,7 @@ def main():
         "react": RetrievalStrategy.REACT,
     }
 
-    logger.info(f"Initializing retriever...")
+    logger.info("Initializing retriever...")
     retriever = HybridRetriever(args.gold, args.silver, mode=args.mode)
 
     all_results = []
@@ -252,27 +287,31 @@ def main():
             logger.info(f"  Strategy: {sn}")
             try:
                 result = retriever.retrieve(qa["question"], strategy)
-                all_results.append({
-                    "question": qa["question"],
-                    "ground_truth": qa["ground_truth"],
-                    "answer": result.answer,
-                    "contexts": [c.get("text", "") for c in result.chunks if c.get("text")],
-                    "strategy": sn,
-                    "execution_time": result.execution_time,
-                    "num_chunks": len(result.chunks),
-                })
+                all_results.append(
+                    {
+                        "question": qa["question"],
+                        "ground_truth": qa["ground_truth"],
+                        "answer": result.answer,
+                        "contexts": [c.get("text", "") for c in result.chunks if c.get("text")],
+                        "strategy": sn,
+                        "execution_time": result.execution_time,
+                        "num_chunks": len(result.chunks),
+                    }
+                )
                 logger.info(f"    Answer: {result.answer[:100]}...")
             except Exception as e:
                 logger.error(f"    Failed: {e}")
-                all_results.append({
-                    "question": qa["question"],
-                    "ground_truth": qa["ground_truth"],
-                    "answer": f"ERROR: {e}",
-                    "contexts": [],
-                    "strategy": sn,
-                    "execution_time": 0,
-                    "num_chunks": 0,
-                })
+                all_results.append(
+                    {
+                        "question": qa["question"],
+                        "ground_truth": qa["ground_truth"],
+                        "answer": f"ERROR: {e}",
+                        "contexts": [],
+                        "strategy": sn,
+                        "execution_time": 0,
+                        "num_chunks": 0,
+                    }
+                )
 
     asyncio.run(_run_ragas_scoring_async(all_results, args))
 

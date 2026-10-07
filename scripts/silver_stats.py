@@ -9,9 +9,8 @@ Usage:
 
 import argparse
 import json
-import glob
+from collections import Counter
 from pathlib import Path
-from collections import Counter, defaultdict
 
 
 def main():
@@ -25,10 +24,26 @@ def main():
     # ============================================================
     # SILVER CHUNKS
     # ============================================================
-    email_chunks = list((silver / "not_personal" / "email_chunks").glob("*.json")) if (silver / "not_personal" / "email_chunks").exists() else []
-    att_chunks = list((silver / "not_personal" / "attachment_chunks").glob("*.json")) if (silver / "not_personal" / "attachment_chunks").exists() else []
-    thread_summaries = list((silver / "not_personal" / "thread_summaries").glob("*.json")) if (silver / "not_personal" / "thread_summaries").exists() else []
-    email_summaries = list((silver / "not_personal" / "email_summaries").glob("*.json")) if (silver / "not_personal" / "email_summaries").exists() else []
+    email_chunks = (
+        list((silver / "not_personal" / "email_chunks").glob("*.json"))
+        if (silver / "not_personal" / "email_chunks").exists()
+        else []
+    )
+    att_chunks = (
+        list((silver / "not_personal" / "attachment_chunks").glob("*.json"))
+        if (silver / "not_personal" / "attachment_chunks").exists()
+        else []
+    )
+    thread_summaries = (
+        list((silver / "not_personal" / "thread_summaries").glob("*.json"))
+        if (silver / "not_personal" / "thread_summaries").exists()
+        else []
+    )
+    email_summaries = (
+        list((silver / "not_personal" / "email_summaries").glob("*.json"))
+        if (silver / "not_personal" / "email_summaries").exists()
+        else []
+    )
     personal = list((silver / "personal").glob("*.json")) if (silver / "personal").exists() else []
 
     # Parse all email chunks
@@ -131,7 +146,9 @@ def main():
     bronze_attachments = 0
     if args.bronze:
         bronze_path = Path(args.bronze)
-        bronze_emails = len(list(bronze_path.rglob("emails/**/*.json"))) - len(list(bronze_path.rglob("emails/**/metadata*.json")))
+        bronze_emails = len(list(bronze_path.rglob("emails/**/*.json"))) - len(
+            list(bronze_path.rglob("emails/**/metadata*.json"))
+        )
         bronze_attachments = len(list(bronze_path.rglob("attachments/**/*.json")))
 
     # Checkpoint
@@ -149,40 +166,40 @@ def main():
     print("=" * 70)
 
     if args.bronze:
-        print(f"\n--- Bronze Input ---")
+        print("\n--- Bronze Input ---")
         print(f"  Total Bronze emails:          {bronze_emails}")
         print(f"  Total Bronze attachments:     {bronze_attachments}")
 
-    print(f"\n--- Processing Overview ---")
+    print("\n--- Processing Overview ---")
     print(f"  Checkpoint threads:           {checkpoint_count}")
     print(f"  Threads with chunks:          {len(thread_ids)}")
     print(f"  Source emails processed:      {len(source_emails)}")
     print(f"  Personal threads (skipped):   {personal_threads} ({personal_emails} emails)")
     print(f"  Processing modes:             {dict(processing_modes)}")
 
-    print(f"\n--- Chunks ---")
+    print("\n--- Chunks ---")
     print(f"  Email chunks:                 {len(email_chunks)}")
     print(f"  Attachment chunks:            {len(att_chunks)}")
     print(f"  Total chunks:                 {len(email_chunks) + len(att_chunks)}")
     print(f"  Total tokens:                 {total_tokens + att_tokens:,}")
 
-    print(f"\n--- Summaries ---")
+    print("\n--- Summaries ---")
     print(f"  Thread summaries:             {len(thread_summaries)}")
     print(f"  Email summaries:              {len(email_summaries)}")
     print(f"  Chunks with summary:          {has_summary}/{len(email_chunks)}")
     print(f"  Chunks with translation:      {has_text_english}/{len(email_chunks)}")
 
-    print(f"\n--- KG Entities (Email Chunks) ---")
+    print("\n--- KG Entities (Email Chunks) ---")
     print(f"  Total entities:               {total_entities}")
     print(f"  Unique entity types:          {len(entity_types)}")
     for etype, count in entity_types.most_common(15):
         print(f"    {etype:25s} {count}")
 
-    print(f"\n--- KG Entities (Attachment Chunks) ---")
+    print("\n--- KG Entities (Attachment Chunks) ---")
     print(f"  Total entities:               {att_entities}")
     print(f"  Total relationships:          {att_relationships}")
 
-    print(f"\n--- KG Relationships (Email Chunks) ---")
+    print("\n--- KG Relationships (Email Chunks) ---")
     print(f"  Total relationships:          {total_relationships}")
     print(f"  Unique relationship types:    {len(relationship_types)}")
     for rtype, count in relationship_types.most_common(15):
@@ -198,12 +215,12 @@ def main():
         except Exception:
             pass
 
-    print(f"\n--- Languages (Email Chunks) ---")
+    print("\n--- Languages (Email Chunks) ---")
     for lang, count in languages.most_common():
         print(f"    {lang:10s} {count} chunks")
 
     if att_languages:
-        print(f"\n--- Languages (Attachment Chunks) ---")
+        print("\n--- Languages (Attachment Chunks) ---")
         for lang, count in att_languages.most_common():
             print(f"    {lang:10s} {count} chunks")
 
@@ -211,17 +228,17 @@ def main():
     all_languages = Counter()
     all_languages.update(languages)
     all_languages.update(att_languages)
-    print(f"\n--- Languages (All Chunks Combined) ---")
+    print("\n--- Languages (All Chunks Combined) ---")
     total_chunks = sum(all_languages.values())
     for lang, count in all_languages.most_common():
         pct = count / total_chunks * 100 if total_chunks else 0
         print(f"    {lang:10s} {count:6d} ({pct:.1f}%)")
 
-    print(f"\n--- Top Senders ---")
+    print("\n--- Top Senders ---")
     for sender, count in senders.most_common(10):
         print(f"    {sender:30s} {count} chunks")
 
-    print(f"\n--- Attachment Files ---")
+    print("\n--- Attachment Files ---")
     print(f"  Total attachment chunks:      {len(att_chunks)}")
     ext_counter = Counter(Path(f).suffix.lower() for f in att_filenames if f)
     for ext, count in ext_counter.most_common(10):

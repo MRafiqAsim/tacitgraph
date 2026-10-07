@@ -10,9 +10,7 @@ Usage:
 
 import argparse
 import json
-import random
 from pathlib import Path
-from collections import defaultdict
 
 
 def generate_colors(n):
@@ -32,10 +30,16 @@ def main():
     parser.add_argument("--gold", required=True, help="Path to Gold layer")
     parser.add_argument("--level", type=int, default=0, help="Community level (default: 0)")
     parser.add_argument("--max-nodes", type=int, default=0, help="Max nodes to display (0 = all)")
-    parser.add_argument("--top", type=int, default=0, help="Show only top N largest communities (0 = all)")
+    parser.add_argument(
+        "--top", type=int, default=0, help="Show only top N largest communities (0 = all)"
+    )
     parser.add_argument("--community", type=int, help="Show only a specific community ID")
     parser.add_argument("--output", default="communities.html", help="Output HTML file")
-    parser.add_argument("--show-labels", action="store_true", help="Show edge type labels (best with --top 10 or fewer)")
+    parser.add_argument(
+        "--show-labels",
+        action="store_true",
+        help="Show edge type labels (best with --top 10 or fewer)",
+    )
     args = parser.parse_args()
 
     try:
@@ -93,23 +97,33 @@ def main():
         except Exception:
             pass
 
-    print(f"Level {args.level}: {len(community_info)} communities, {len(node_to_community)} nodes assigned")
+    print(
+        f"Level {args.level}: {len(community_info)} communities, {len(node_to_community)} nodes assigned"
+    )
 
     # Filter to top N communities by size
     if args.top > 0:
-        sorted_comms = sorted(community_info.keys(), key=lambda c: community_info[c]["size"], reverse=True)
-        top_comms = set(sorted_comms[:args.top])
+        sorted_comms = sorted(
+            community_info.keys(), key=lambda c: community_info[c]["size"], reverse=True
+        )
+        top_comms = set(sorted_comms[: args.top])
         # Remove nodes not in top communities
         node_to_community = {nid: cid for nid, cid in node_to_community.items() if cid in top_comms}
         community_info = {cid: info for cid, info in community_info.items() if cid in top_comms}
-        print(f"Filtered to top {args.top} communities ({sum(c['size'] for c in community_info.values())} nodes)")
+        print(
+            f"Filtered to top {args.top} communities ({sum(c['size'] for c in community_info.values())} nodes)"
+        )
 
     # Filter to specific community if requested
     if args.community is not None:
         target_comm = str(args.community)
-        matching = [cid for cid in community_info if str(cid) == target_comm or target_comm in str(cid)]
+        matching = [
+            cid for cid in community_info if str(cid) == target_comm or target_comm in str(cid)
+        ]
         if not matching:
-            print(f"Community {args.community} not found. Available: {list(community_info.keys())[:20]}")
+            print(
+                f"Community {args.community} not found. Available: {list(community_info.keys())[:20]}"
+            )
             return
         target_comm = matching[0]
         allowed_nodes = {nid for nid, cid in node_to_community.items() if cid == target_comm}
@@ -136,13 +150,17 @@ def main():
             entity_nodes[node_id] = node
 
     # Sort by mentions, limit
-    sorted_nodes = sorted(entity_nodes.items(), key=lambda x: x[1].get("mention_count", 0), reverse=True)
+    sorted_nodes = sorted(
+        entity_nodes.items(), key=lambda x: x[1].get("mention_count", 0), reverse=True
+    )
     if args.max_nodes > 0 and len(sorted_nodes) > args.max_nodes:
-        sorted_nodes = sorted_nodes[:args.max_nodes]
+        sorted_nodes = sorted_nodes[: args.max_nodes]
         print(f"Limited to top {args.max_nodes} nodes")
 
     if len(sorted_nodes) > 5000:
-        print(f"WARNING: {len(sorted_nodes)} nodes — browser may be slow. Use --max-nodes to limit.")
+        print(
+            f"WARNING: {len(sorted_nodes)} nodes — browser may be slow. Use --max-nodes to limit."
+        )
 
     included_ids = {n[0] for n in sorted_nodes}
 
@@ -195,13 +213,13 @@ def main():
     print(f"  Communities shown: {len(set(node_to_community.get(n, '') for n in included_ids))}")
 
     # Print top communities
-    print(f"\n  Top 10 communities by size:")
+    print("\n  Top 10 communities by size:")
     for cid in comm_ids[:10]:
         info = community_info[cid]
         topics = ", ".join(info.get("key_topics", [])[:3])
         print(f"    Community {cid}: {info['size']} nodes — {topics}")
 
-    print(f"\nOpen in browser:")
+    print("\nOpen in browser:")
     print(f"  Mac:   open {args.output}")
     print(f"  Linux: xdg-open {args.output}")
 

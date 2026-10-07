@@ -18,10 +18,18 @@ def main():
     parser = argparse.ArgumentParser(description="Visualize knowledge graph as interactive HTML")
     parser.add_argument("--gold", required=True, help="Path to Gold layer")
     parser.add_argument("--output", default="knowledge_graph.html", help="Output HTML file")
-    parser.add_argument("--max-nodes", type=int, default=0, help="Max nodes to display (0 = all, default: all)")
-    parser.add_argument("--type", nargs="*", help="Filter to specific node types (e.g., PERSON ORG GPE)")
-    parser.add_argument("--min-mentions", type=int, default=1, help="Min mention count to include (default: 1)")
-    parser.add_argument("--show-labels", action="store_true", help="Show edge type labels (best with <500 nodes)")
+    parser.add_argument(
+        "--max-nodes", type=int, default=0, help="Max nodes to display (0 = all, default: all)"
+    )
+    parser.add_argument(
+        "--type", nargs="*", help="Filter to specific node types (e.g., PERSON ORG GPE)"
+    )
+    parser.add_argument(
+        "--min-mentions", type=int, default=1, help="Min mention count to include (default: 1)"
+    )
+    parser.add_argument(
+        "--show-labels", action="store_true", help="Show edge type labels (best with <500 nodes)"
+    )
     args = parser.parse_args()
 
     try:
@@ -41,6 +49,7 @@ def main():
         graphml_file = gold / "knowledge_graph" / "graph.graphml"
         if graphml_file.exists():
             import networkx as nx
+
             G = nx.read_graphml(str(graphml_file))
             print(f"Loaded GraphML: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
         else:
@@ -95,13 +104,17 @@ def main():
             entity_nodes[node_id] = node
 
         # Sort by mentions and limit
-        sorted_nodes = sorted(entity_nodes.items(), key=lambda x: x[1].get("mention_count", 0), reverse=True)
+        sorted_nodes = sorted(
+            entity_nodes.items(), key=lambda x: x[1].get("mention_count", 0), reverse=True
+        )
         if args.max_nodes > 0 and len(sorted_nodes) > args.max_nodes:
-            sorted_nodes = sorted_nodes[:args.max_nodes]
+            sorted_nodes = sorted_nodes[: args.max_nodes]
             print(f"Limited to top {args.max_nodes} nodes by mention count")
 
         if len(sorted_nodes) > 5000:
-            print(f"WARNING: {len(sorted_nodes)} nodes — browser may be slow. Use --max-nodes to limit.")
+            print(
+                f"WARNING: {len(sorted_nodes)} nodes — browser may be slow. Use --max-nodes to limit."
+            )
 
         included_ids = {n[0] for n in sorted_nodes}
 
@@ -148,7 +161,11 @@ def main():
 
     else:
         # Build from NetworkX GraphML
-        entity_nodes = [n for n in G.nodes() if G.nodes[n].get("node_type", "") not in ["CHUNK", "THREAD", "EMAIL"]]
+        entity_nodes = [
+            n
+            for n in G.nodes()
+            if G.nodes[n].get("node_type", "") not in ["CHUNK", "THREAD", "EMAIL"]
+        ]
 
         if args.type:
             entity_nodes = [n for n in entity_nodes if G.nodes[n].get("node_type", "") in args.type]
@@ -156,16 +173,23 @@ def main():
         # Limit
         entity_nodes = sorted(entity_nodes, key=lambda n: G.degree(n), reverse=True)
         if args.max_nodes > 0:
-            entity_nodes = entity_nodes[:args.max_nodes]
+            entity_nodes = entity_nodes[: args.max_nodes]
         included_ids = set(entity_nodes)
 
-        net = Network(height="900px", width="100%", cdn_resources="remote", select_menu=True, filter_menu=True)
+        net = Network(
+            height="900px", width="100%", cdn_resources="remote", select_menu=True, filter_menu=True
+        )
 
         for n in entity_nodes:
             ntype = G.nodes[n].get("node_type", "UNKNOWN")
             name = G.nodes[n].get("name", n)
-            net.add_node(n, label=name[:30], title=f"<b>{name}</b><br>Type: {ntype}",
-                         color=colors.get(ntype, "#BDC3C7"), group=ntype)
+            net.add_node(
+                n,
+                label=name[:30],
+                title=f"<b>{name}</b><br>Type: {ntype}",
+                color=colors.get(ntype, "#BDC3C7"),
+                group=ntype,
+            )
 
         edge_count = 0
         for e in G.edges():
@@ -184,7 +208,7 @@ def main():
     print(f"\nGraph visualization saved: {args.output}")
     print(f"  Nodes: {node_count}")
     print(f"  Edges: {edge_count}")
-    print(f"\nOpen in browser:")
+    print("\nOpen in browser:")
     print(f"  Mac:   open {args.output}")
     print(f"  Linux: xdg-open {args.output}")
     print(f"  Windows: start {args.output}")

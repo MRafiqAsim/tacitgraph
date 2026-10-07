@@ -1,95 +1,50 @@
-# Virtual Environment
-.venv/
-venv/
-env/
-ENV/
-
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
 
-# IDE
+# Virtual environments
+.venv/
+venv/
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Secrets
+.env
+.env.*
+!.env.template
+
+# Pipeline data and outputs (never commit mailbox content)
+data/
+logs/
+*.log
+*.pst
+*.ost
+
+# Notebooks
+.ipynb_checkpoints/
+
+# IDE / OS
 .idea/
 .vscode/
 *.swp
-*.swo
-*~
-
-# Environment variables (secrets)
-.env
-.env.local
-.env.*.local
-
-# OS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-desktop.ini
 
-# Data directories (large files - don't commit)
-data/
-
-# Legacy packages (moved to bronze/silver/gold)
-src/anonymization/
-src/extraction/
-src/graph/
-src/ingestion/
-
-# Conflict handling (not used in pipeline)
-src/conflict_handling/
-
-# Logs
-*.log
-logs/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb_checkpoints
-
-# Test/Coverage
-.coverage
-.pytest_cache/
-htmlcov/
-.tox/
-.nox/
-
-# Build
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Type checking
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Profiling
-*.prof
-
-# Misc
-pipeline_exceptions.txt
+# Re-include project docs (overrides a global "*.md" ignore, if any)
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!CHANGELOG.md
+!CODE_OF_CONDUCT.md
+!docs/**/*.md
+!.github/**/*.md

@@ -9,8 +9,8 @@ Usage:
 
 import argparse
 import json
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
 
 def main():
@@ -152,7 +152,7 @@ def main():
         clean = subj.strip()
         for prefix in ["RE:", "Re:", "re:", "FW:", "Fw:", "fw:", "AW:", "Aw:", "FINAL "]:
             if clean.startswith(prefix):
-                clean = clean[len(prefix):].strip()
+                clean = clean[len(prefix) :].strip()
         normalized_subjects[clean] += 1
 
     single_email_threads = sum(1 for c in normalized_subjects.values() if c == 1)
@@ -165,57 +165,59 @@ def main():
     print("BRONZE LAYER STATISTICS")
     print("=" * 70)
 
-    print(f"\n--- Emails ---")
+    print("\n--- Emails ---")
     print(f"  Total emails:                 {total_emails}")
     print(f"  With body text:               {has_body}")
     print(f"  Empty body:                   {empty_body}")
-    print(f"  With attachments:             {has_attachments} ({total_attachment_count} total attachments)")
+    print(
+        f"  With attachments:             {has_attachments} ({total_attachment_count} total attachments)"
+    )
 
     if body_lengths:
-        print(f"\n--- Body Size ---")
+        print("\n--- Body Size ---")
         print(f"  Average body length:          {sum(body_lengths) // len(body_lengths):,} chars")
         print(f"  Min body length:              {min(body_lengths):,} chars")
         print(f"  Max body length:              {max(body_lengths):,} chars")
         print(f"  Emails > 10K chars:           {sum(1 for l in body_lengths if l > 10000)}")
         print(f"  Emails > 20K chars:           {sum(1 for l in body_lengths if l > 20000)}")
 
-    print(f"\n--- Threading Headers ---")
+    print("\n--- Threading Headers ---")
     print(f"  Has Message-ID:               {has_message_id}/{total_emails}")
     print(f"  Has In-Reply-To:              {has_in_reply_to}/{total_emails}")
     print(f"  Has References:               {has_references}/{total_emails}")
 
-    print(f"\n--- Thread Estimate (by subject) ---")
+    print("\n--- Thread Estimate (by subject) ---")
     print(f"  Unique subjects:              {len(normalized_subjects)}")
     print(f"  Single-email threads:         {single_email_threads}")
     print(f"  Multi-email threads:          {multi_email_threads}")
 
-    print(f"\n--- Participants ---")
+    print("\n--- Participants ---")
     print(f"  Unique senders:               {len(senders)}")
     print(f"  Unique sender emails:         {len(sender_emails_counter)}")
     print(f"  Total recipients:             {recipients_count}")
     print(f"  Unique recipient emails:      {len(unique_recipients)}")
 
-    print(f"\n--- Top Senders ---")
+    print("\n--- Top Senders ---")
     for sender, count in senders.most_common(15):
         print(f"    {sender:35s} {count}")
 
-    print(f"\n--- Languages ---")
+    print("\n--- Languages ---")
     for lang, count in languages.most_common():
         pct = count / total_emails * 100 if total_emails else 0
         print(f"    {lang:10s} {count:6d} ({pct:.1f}%)")
 
-    print(f"\n--- Date Range ---")
+    print("\n--- Date Range ---")
     for year, count in sorted(years.items()):
         bar = "#" * (count // 20)
         print(f"    {year}:  {count:5d}  {bar}")
 
-    print(f"\n--- Attachments on Disk ---")
+    print("\n--- Attachments on Disk ---")
     print(f"  Total attachment metadata:    {total_att_files}")
     print(f"  Successfully extracted:       {att_with_text}")
     print(f"  Failed extraction:            {att_failed}")
 
     if att_extensions:
-        print(f"\n--- Attachment Types ---")
+        print("\n--- Attachment Types ---")
         for ext, count in att_extensions.most_common(15):
             print(f"    {ext:15s} {count}")
 
