@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from tacitgraph.prompt_loader import get_prompt
 
@@ -316,7 +316,8 @@ class OpenAIVisionExtractor:
                 dpi=150,  # Balance quality vs size
                 fmt="png",
                 first_page=1,
-                last_page=max_pages,  # type: ignore[arg-type]  # pdf2image accepts None (= all pages)
+                # Annotated as int, but None (the default) converts every page
+                last_page=cast(int, max_pages),
             )
 
             for page in pages:

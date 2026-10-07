@@ -6,6 +6,7 @@ and extracts text content with metadata.
 """
 
 import hashlib
+import importlib
 import logging
 import subprocess
 import tempfile
@@ -613,7 +614,7 @@ class DocumentParser:
             import pypdf
         except ImportError:
             try:
-                import PyPDF2 as pypdf  # type: ignore[no-redef]  # legacy fallback
+                pypdf = importlib.import_module("PyPDF2")  # legacy fallback
             except ImportError as exc:
                 raise ImportError("Install pypdf or PyPDF2: pip install pypdf") from exc
 
