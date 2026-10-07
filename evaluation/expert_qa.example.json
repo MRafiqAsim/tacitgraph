@@ -1,0 +1,14 @@
+[
+  {
+    "question": "When did the team complete the migration of the ERP system to the cloud platform?",
+    "ground_truth": "March 2024"
+  },
+  {
+    "question": "What availability target was agreed in the service-level agreement for the new data centre?",
+    "ground_truth": "99.95% monthly uptime"
+  },
+  {
+    "question": "What did the project lead recommend to reduce failed deployments in Project Atlas?",
+    "ground_truth": "Add an automated canary stage before each production rollout"
+  }
+]
