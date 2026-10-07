@@ -189,7 +189,7 @@ tests/            pytest suite
 ## Development
 
 ```bash
-uv sync --all-extras
+uv sync --all-extras --group models   # omit --group models if you only run the tests
 uv run pre-commit install
 uv run pytest                 # unit tests
 uv run ruff check . && uv run ruff format --check .
