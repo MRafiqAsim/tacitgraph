@@ -134,6 +134,7 @@ class AzureSearchIndexer:
         """
         from azure.search.documents.indexes.models import (
             HnswAlgorithmConfiguration,
+            HnswParameters,
             SearchField,
             SearchFieldDataType,
             SearchIndex,
@@ -252,12 +253,12 @@ class AzureSearchIndexer:
             algorithms=[
                 HnswAlgorithmConfiguration(
                     name="hnsw-algo",
-                    parameters={
-                        "m": self.config.hnsw_m,
-                        "efConstruction": self.config.hnsw_ef_construction,
-                        "efSearch": self.config.hnsw_ef_search,
-                        "metric": "cosine",
-                    },
+                    parameters=HnswParameters(
+                        m=self.config.hnsw_m,
+                        ef_construction=self.config.hnsw_ef_construction,
+                        ef_search=self.config.hnsw_ef_search,
+                        metric="cosine",
+                    ),
                 ),
             ],
             profiles=[
@@ -460,7 +461,7 @@ class HybridSearcher:
         top_k = top_k or self.config.top_k
 
         # Build search parameters
-        search_kwargs = {
+        search_kwargs: dict[str, Any] = {
             "top": top_k,
             "include_total_count": True,
             "select": [
