@@ -33,49 +33,13 @@ Much of an organisation's know-how never reaches a wiki. It lives in years of em
 
 TacitGraph follows a medallion architecture: each layer is a set of plain JSON files you can inspect.
 
-```mermaid
-flowchart LR
-    subgraph Sources
-        PST[Outlook PST / MSG]
-        DOCS[PDF · DOCX · XLSX · PPTX]
-    end
-    subgraph Bronze["Bronze — raw extraction"]
-        B1[Emails + headers]
-        B2[Attachments]
-        B3[Threads]
-    end
-    subgraph Silver["Silver — understanding"]
-        S1[Work / personal classification]
-        S2[Cleaning · reply splitting]
-        S3[Chunking · translation]
-        S4[Entities · relationships · summaries]
-    end
-    subgraph Gold["Gold — knowledge"]
-        G1[Knowledge graph]
-        G2[Entity catalog + aliases]
-        G3[Leiden communities]
-        G4[Embeddings]
-    end
-    subgraph Retrieval["Ask"]
-        R[Vector · GraphRAG · PathRAG · Hybrid · ReAct]
-        UI[Gradio chat]
-    end
-    PST --> B1 & B2
-    DOCS --> B2
-    B1 --> B3 --> S1 --> S2 --> S3 --> S4
-    B2 --> S3
-    S4 --> G1 --> G2
-    G1 --> G3
-    S4 --> G4
-    G1 & G3 & G4 --> R --> UI
-```
+### High level architecture
 
-<details>
-<summary>Detailed data flow</summary>
+![High level architecture](diagrams/high_level_architecture.png)
+
+### Data flow
 
 ![Data flow](diagrams/data_flow_diagram.png)
-
-</details>
 
 ### Retrieval strategies
 
@@ -97,9 +61,33 @@ Every strategy writes cited answers with a chat model — a local one through Ol
 | `llm` | GPT-4o for classification, extraction, translation and summaries | API usage |
 | `hybrid` | Local first; the LLM verifies low-confidence results | Reduced API usage |
 
+### Technology stack
+
+| Component | Local (NLP) mode | LLM mode |
+|---|---|---|
+| Work / personal classification | Rule-based ([`config/sensitivity_rules.yaml`](config/sensitivity_rules.yaml)) | GPT-4o |
+| PII detection | Presidio + spaCy | GPT-4o |
+| Named entities | spaCy (`en_core_web_trf`, `nl_core_news_lg`) | GPT-4o, normalised to English |
+| Relationships | spaCy dependency parsing | GPT-4o |
+| Translation | — (multilingual embeddings) | GPT-4o, in the same call as entity extraction |
+| Summaries | DistilBART (`sshleifer/distilbart-cnn-12-6`) | GPT-4o |
+| Embeddings | bge-m3 (1024 dims, multilingual) | text-embedding-3-small (1536 dims) |
+| Answers | Local LLM via Ollama (Llama 3.1 8B), or quoted sources | GPT-4o |
+| Graph | NetworkX + Leiden communities | NetworkX + Leiden communities |
+| Storage | JSON files and `.npy` embeddings | JSON files and `.npy` embeddings |
+| UI | Gradio | Gradio |
+
 ## Quickstart
 
-Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/). PST parsing compiles `libpff-python` and uses a few system tools (Debian/Ubuntu/WSL shown; the Docker image below has them built in):
+
+```bash
+sudo apt install -y build-essential   # compiles libpff-python (PST parsing)
+sudo apt install -y antiword          # legacy .doc attachments
+sudo apt install -y poppler-utils     # PDF pages to images for scanned documents
+sudo apt install -y libreoffice-core  # optional: legacy Office format conversion
+sudo apt install -y pst-utils         # optional: readpst fallback for damaged PSTs
+```
 
 ```bash
 git clone https://github.com/MRafiqAsim/tacitgraph.git
@@ -129,6 +117,28 @@ uv run tacitgraph-index --mode local --all
 # 4. Ask
 uv run tacitgraph-query --mode local --strategy hybrid -q "Who worked on the ERP migration?"
 uv run tacitgraph-app --mode local          # chat UI on http://localhost:7861
+```
+
+To use GPT-4o for extraction, translation and summaries instead, put Azure OpenAI or OpenAI credentials in `.env` and swap the mode:
+
+```bash
+uv run tacitgraph-process --mode llm --with-summaries   # → ./data/silver_llm
+uv run tacitgraph-index   --mode llm --all              # → ./data/gold_llm
+uv run tacitgraph-app     --mode llm
+```
+
+Useful options for large archives:
+
+```bash
+uv run tacitgraph-ingest  --pst ./archive.pst --output ./data --limit 50   # try a small sample first
+uv run tacitgraph-process --mode local --resume                            # continue an interrupted run
+uv run tacitgraph-index   --mode local --generate-embeddings --skip-graph  # re-embed only
+
+# Statistics and interactive graph views (HTML)
+uv run python scripts/silver_stats.py --silver data/silver_local --bronze data/bronze
+uv run python scripts/gold_stats.py --gold data/gold_local
+uv run python scripts/visualize_graph.py --gold data/gold_local --type PERSON ORG --max-nodes 200
+uv run python scripts/visualize_communities.py --gold data/gold_local --level 1
 ```
 
 ### Or run everything with Docker
@@ -215,6 +225,10 @@ uv run ruff check . && uv run ruff format --check .
 ```
 
 CI runs linting and the test suite on Python 3.11 and 3.12 for every push and pull request.
+
+## Contributing
+
+Issues and pull requests are welcome. Fork the repository, create a feature branch, run `uv run pre-commit run --all-files` and `uv run pytest`, and open a pull request against `main`.
 
 ## Privacy
 
