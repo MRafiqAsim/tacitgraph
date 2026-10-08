@@ -361,11 +361,13 @@ class HybridRetriever(AnswerGeneration):
 
         start = time.time()
 
+        notice = self._llm_unavailable_notice()
         if not self.llm_client:
             logger.warning("GraphRAG requires LLM — no LLM available")
             return RetrievalResult(
                 query=query,
-                answer="GraphRAG requires an LLM connection.",
+                answer=notice
+                or "GraphRAG needs a language model. Configure one in config/models.json or .env.",
                 chunks=[],
                 strategy="graphrag",
                 confidence=0.0,

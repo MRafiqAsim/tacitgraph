@@ -2,6 +2,7 @@
 
 import json
 
+import httpx
 import pytest
 
 from tacitgraph import llm_client, model_config
@@ -81,3 +82,42 @@ def test_cloud_providers_take_precedence(models_config, server_up, monkeypatch):
 
 def test_unreachable_server_is_detected():
     assert llm_client._local_server_reachable("http://127.0.0.1:9/v1") is False
+
+
+def test_unavailable_message_names_model_and_fix(models_config, server_down):
+    models_config(
+        {"enabled": True, "base_url": "http://localhost:11434/v1", "model": "llama3.1:8b"}
+    )
+    message = llm_client.local_llm_unavailable_message()
+    assert "llama3.1:8b" in message and "http://localhost:11434/v1" in message
+    assert "ollama serve" in message
+
+
+def test_no_message_when_reachable_or_disabled(models_config, server_up, monkeypatch):
+    models_config({"enabled": True, "base_url": "http://localhost:11434/v1"})
+    assert llm_client.local_llm_unavailable_message() is None
+    models_config({"enabled": False, "base_url": "http://localhost:11434/v1"})
+    model_config.load_models_config.cache_clear()
+    llm_client._local_config.cache_clear()
+    monkeypatch.setattr(llm_client, "_local_server_reachable", lambda url: False)
+    assert llm_client.local_llm_unavailable_message() is None
+
+
+def test_only_successful_probes_are_remembered(monkeypatch):
+    calls = []
+
+    class Response:
+        status_code = 200
+
+    def fake_get(url, timeout):
+        calls.append(url)
+        if len(calls) == 1:
+            raise httpx.ConnectError("down")
+        return Response()
+
+    monkeypatch.setattr(httpx, "get", fake_get)
+    url = "http://localhost:11434/v1"
+    assert llm_client._local_server_reachable(url) is False
+    assert llm_client._local_server_reachable(url) is True  # server came up
+    assert llm_client._local_server_reachable(url) is True
+    assert len(calls) == 2

@@ -12,7 +12,7 @@ def _reset_caches():
         prompt_loader._CACHE = None
         model_config.load_models_config.cache_clear()
         llm_client._local_config.cache_clear()
-        llm_client._local_server_reachable.cache_clear()
+        llm_client.forget_local_server()
 
     clear()
     yield

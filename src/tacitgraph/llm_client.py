@@ -37,15 +37,50 @@ def _local_config() -> dict[str, Any]:
     return config
 
 
-@cache
+_REACHABLE_SERVERS: set[str] = set()
+
+
 def _local_server_reachable(base_url: str) -> bool:
-    """True when the OpenAI-compatible server answers ``GET /models``."""
+    """True when the OpenAI-compatible server answers ``GET /models``.
+
+    Only successes are remembered, so a server started later is picked up.
+    """
+    if base_url in _REACHABLE_SERVERS:
+        return True
     import httpx
 
     try:
-        return httpx.get(f"{base_url.rstrip('/')}/models", timeout=2.0).status_code == 200
+        ok = httpx.get(f"{base_url.rstrip('/')}/models", timeout=2.0).status_code == 200
     except httpx.HTTPError:
-        return False
+        ok = False
+    if ok:
+        _REACHABLE_SERVERS.add(base_url)
+    return ok
+
+
+def forget_local_server() -> None:
+    """Re-probe the local server on next use, e.g. after a request to it failed."""
+    _REACHABLE_SERVERS.clear()
+
+
+def local_llm_unavailable_message() -> str | None:
+    """User-facing notice when a local chat server is configured but not reachable."""
+    if llm_provider() in ("azure", "openai"):
+        return None
+    local = _local_config()
+    base_url = local.get("base_url")
+    if not (local.get("enabled") and base_url) or _local_server_reachable(base_url):
+        return None
+    model = local.get("model") or DEFAULT_LOCAL_MODEL
+    return (
+        "⚠️ **The local language model is not reachable.**\n\n"
+        f"TacitGraph is configured to answer with `{model}` at `{base_url}`, "
+        "but the server did not respond. Start it with `ollama serve` "
+        f"(the first time also run `ollama pull {model}`), then ask again — "
+        "no restart needed.\n\n"
+        "The retrieved sources are still listed. To answer without a language model, "
+        'set `"enabled": false` under `llm.local` in `config/models.json`.'
+    )
 
 
 def llm_provider() -> str | None:
@@ -58,7 +93,6 @@ def llm_provider() -> str | None:
     if local.get("enabled") and local.get("base_url"):
         if _local_server_reachable(local["base_url"]):
             return "local"
-        logger.warning(f"Local LLM server not reachable at {local['base_url']}")
     return None
 
 

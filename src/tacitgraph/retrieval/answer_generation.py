@@ -4,7 +4,13 @@ import logging
 import re
 from typing import Any
 
-from tacitgraph.llm_client import create_chat_client
+from tacitgraph.llm_client import (
+    chat_model,
+    create_chat_client,
+    forget_local_server,
+    llm_provider,
+    local_llm_unavailable_message,
+)
 from tacitgraph.prompt_loader import format_prompt, get_prompt
 from tacitgraph.retrieval.lexical_index import tokenize
 from tacitgraph.retrieval.thread_expansion import ThreadExpansion
@@ -50,6 +56,20 @@ class AnswerGeneration(ThreadExpansion):
         """Initialize the LLM client for answer generation (None when no provider is set)."""
         self.llm_client = create_chat_client()
 
+    def _llm_unavailable_notice(self) -> str | None:
+        """Connect if a chat server has become available; otherwise explain why there is none.
+
+        Returns None when an LLM client is ready or none is configured (extractive mode).
+        """
+        if self.llm_client is None:
+            self.llm_client = create_chat_client()
+            if self.llm_client is not None:
+                self.config.answer_model = chat_model()
+                logger.info(f"Connected to chat model {self.config.answer_model}")
+        if self.llm_client is not None:
+            return None
+        return local_llm_unavailable_message()
+
     def _generate_answer(
         self, query: str, chunks: list[dict[str, Any]], extra_context: str = ""
     ) -> tuple[str, bool, str | None, int]:
@@ -63,7 +83,11 @@ class AnswerGeneration(ThreadExpansion):
         if not chunks and not extra_context:
             return "", True, None, 0
 
-        # Local mode: quote matching sentences from the retrieved chunks
+        notice = self._llm_unavailable_notice()
+        if notice:
+            return notice, False, "Language model not reachable", 0
+
+        # No language model configured: quote matching sentences from the retrieved chunks
         if not self.llm_client:
             answer, is_grounded, missing_info = self._generate_local_answer(
                 query, chunks, extra_context
@@ -165,9 +189,21 @@ class AnswerGeneration(ThreadExpansion):
             total_tokens = getattr(response.usage, "total_tokens", 0) if response.usage else 0
         except Exception as e:
             # Handles: LLMContentError (content_filter/length), RateLimitError,
-            # APIStatusError, network timeouts, etc.
+            # APIStatusError, network timeouts and a local server that went away.
             logger.error(f"Answer generation failed: {e}")
-            return "", True, None, 0
+            if llm_provider() == "local" or local_llm_unavailable_message():
+                forget_local_server()
+                notice = local_llm_unavailable_message()
+                if notice:
+                    self.llm_client = None
+                    return notice, False, "Language model not reachable", 0
+            return (
+                f"⚠️ **The language model request failed** ({type(e).__name__}). "
+                "The retrieved sources are listed; please try again.",
+                False,
+                "Language model request failed",
+                0,
+            )
 
         # Grounding check
         is_grounded = True
