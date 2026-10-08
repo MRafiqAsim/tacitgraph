@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Secrets
+.env
+.env.*
+!.env.template
+
+# Pipeline data and outputs (never commit mailbox content)
+data/
+logs/
+*.log
+*.pst
+*.ost
+
+# Notebooks
+.ipynb_checkpoints/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Re-include project docs (overrides a global "*.md" ignore, if any)
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!CHANGELOG.md
+!CODE_OF_CONDUCT.md
+!docs/**/*.md
+!.github/**/*.md

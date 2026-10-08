@@ -1,0 +1,11 @@
+{
+  "llm": {
+    "local": {
+      "base_url": "http://localhost:11434/v1",
+      "model": "llama3.1:8b"
+    }
+  },
+  "embedding": {
+    "local_model": "BAAI/bge-m3"
+  }
+}

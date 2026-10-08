@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use TacitGraph in your work, please cite it as below."
+title: "TacitGraph: From PST to a knowledge graph you can chat with"
+type: software
+authors:
+  - family-names: Rafiq
+    given-names: Muhammad
+repository-code: "https://github.com/MRafiqAsim/tacitgraph"
+license: Apache-2.0
+version: 0.1.0
+date-released: "2026-10-07"
+keywords:
+  - retrieval-augmented generation
+  - knowledge graph
+  - GraphRAG
+  - PathRAG
+  - email
+  - Outlook PST

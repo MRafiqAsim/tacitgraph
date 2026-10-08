@@ -1,0 +1,37 @@
+# Email Sensitivity Classification Rules
+#
+# Override or extend the built-in patterns used by EmailSensitivityClassifier.
+# Any section omitted here falls back to built-in defaults.
+#
+# Classification: "technical" → preserve names/emails (no anonymization)
+#                 "sensitive" → anonymize as usual
+#
+# Thread rule: if ANY email in a thread is "technical", the ENTIRE thread
+#              is preserved (not anonymized).
+
+# Manual overrides by sender email (highest priority, skips all signals)
+overrides: []
+  # - sender_email: "ci-bot@company.com"
+  #   classification: "technical"
+  # - sender_email: "hr-notifications@company.com"
+  #   classification: "sensitive"
+
+# Uncomment and edit to override default patterns:
+#
+# technical_subject_patterns:
+#   - "(?i)\\b(deployment|release|hotfix)\\b"
+#
+# sensitive_subject_patterns:
+#   - "(?i)\\b(salary|compensation|bonus)\\b"
+#
+# technical_body_patterns:
+#   - "(?i)\\b(stack\\s*trace|traceback)\\b"
+#
+# sensitive_body_patterns:
+#   - "(?i)\\b(social\\s*security|SSN)\\b"
+#
+# technical_folder_patterns:
+#   - "(?i)(engineering|development|devops)"
+#
+# sensitive_folder_patterns:
+#   - "(?i)(HR|human\\s*resources|legal)"

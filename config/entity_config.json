@@ -1,0 +1,435 @@
+{
+  "_comment": "Centralized entity and relationship config. Gold layer normalizes using this file.",
+  "entity_types": {
+    "ORG": {
+      "description": "Corporate entities, companies, business units, departments, teams",
+      "spacy_labels": [
+        "ORG"
+      ],
+      "llm_aliases": [
+        "ORGANIZATION",
+        "COMPANY",
+        "DEPT"
+      ],
+      "index_paths": true
+    },
+    "GPE": {
+      "description": "Countries, cities, geopolitical entities",
+      "spacy_labels": [
+        "GPE"
+      ],
+      "llm_aliases": [
+        "GEO",
+        "LOCATION",
+        "COUNTRY",
+        "CITY"
+      ],
+      "index_paths": true
+    },
+    "PERSON": {
+      "description": "People names",
+      "spacy_labels": [
+        "PERSON"
+      ],
+      "llm_aliases": [],
+      "index_paths": true
+    },
+    "PRODUCT": {
+      "description": "Products, technologies, tools, platforms, software, materials",
+      "spacy_labels": [
+        "PRODUCT"
+      ],
+      "llm_aliases": [
+        "TECHNOLOGY",
+        "TECH",
+        "TOOL",
+        "PLATFORM",
+        "SOFTWARE",
+        "MATERIAL"
+      ],
+      "index_paths": true
+    },
+    "DOCUMENT": {
+      "description": "Document names, reports, specifications",
+      "spacy_labels": [
+        "WORK_OF_ART"
+      ],
+      "llm_aliases": [
+        "REPORT"
+      ],
+      "index_paths": true
+    },
+    "PROJECT": {
+      "description": "Project names, initiatives, programs",
+      "spacy_labels": [],
+      "llm_aliases": [
+        "INITIATIVE",
+        "PROGRAM"
+      ],
+      "index_paths": false
+    },
+    "EVENT": {
+      "description": "Meetings, milestones, conferences",
+      "spacy_labels": [
+        "EVENT"
+      ],
+      "llm_aliases": [],
+      "index_paths": false
+    },
+    "LAW": {
+      "description": "Laws, regulations, standards, compliance",
+      "spacy_labels": [
+        "LAW"
+      ],
+      "llm_aliases": [
+        "REGULATION",
+        "STANDARD",
+        "COMPLIANCE"
+      ],
+      "index_paths": false
+    },
+    "LOC": {
+      "description": "Non-political locations, facilities",
+      "spacy_labels": [
+        "LOC",
+        "FAC"
+      ],
+      "llm_aliases": [
+        "FACILITY"
+      ],
+      "index_paths": false
+    },
+    "NORP": {
+      "description": "Nationalities, religions, political groups",
+      "spacy_labels": [
+        "NORP"
+      ],
+      "llm_aliases": [
+        "CATEGORY"
+      ],
+      "index_paths": false
+    },
+    "CONCEPT": {
+      "description": "Abstract concepts",
+      "spacy_labels": [],
+      "llm_aliases": [],
+      "index_paths": false
+    },
+    "PROCESS": {
+      "description": "Operational processes, workflows, procedures",
+      "spacy_labels": [],
+      "llm_aliases": [
+        "WORKFLOW",
+        "PROCEDURE"
+      ],
+      "index_paths": true
+    },
+    "FACILITY": {
+      "description": "Physical operational sites such as plants, offices, warehouses, data centres and production lines: places where work happens (not corporate entities)",
+      "spacy_labels": [],
+      "llm_aliases": [
+        "SITE",
+        "PLANT",
+        "LINE"
+      ],
+      "index_paths": true
+    },
+    "EQUIPMENT": {
+      "description": "Machines, instruments, hardware, tools",
+      "spacy_labels": [],
+      "llm_aliases": [
+        "MACHINE",
+        "INSTRUMENT",
+        "HARDWARE"
+      ],
+      "index_paths": true
+    }
+  },
+  "relationship_normalization": {
+    "_comment": "Map LLM freeform relationship types to standard types. Same-direction synonyms.",
+    "INVOLVED_IN": "WORKS_ON",
+    "PARTICIPATES_IN": "WORKS_ON",
+    "EMPLOYED_BY": "WORKS_AT",
+    "EMPLOYED_AT": "WORKS_AT",
+    "BASED_IN": "LOCATED_IN",
+    "HEADQUARTERED_IN": "LOCATED_IN",
+    "SITUATED_IN": "LOCATED_IN",
+    "UTILIZES": "USES",
+    "EMPLOYS_TOOL": "USES",
+    "BELONGS_TO": "PART_OF",
+    "MEMBER_OF": "PART_OF",
+    "SUBSIDIARY_OF": "PART_OF",
+    "CREATED": "AUTHORED",
+    "WROTE": "AUTHORED",
+    "PRODUCED": "AUTHORED",
+    "MANAGES": "RESPONSIBLE_FOR",
+    "OVERSEES": "RESPONSIBLE_FOR",
+    "LEADS": "RESPONSIBLE_FOR",
+    "ABOUT": "DISCUSSES",
+    "CONCERNS": "DISCUSSES",
+    "REGARDING": "DISCUSSES",
+    "RELATED_TO": "RELATED_TO",
+    "CONNECTED_TO": "RELATED_TO",
+    "ASSOCIATED_WITH": "RELATED_TO",
+    "WORKS_WITH": "RELATED_TO",
+    "WORKS_FOR": "WORKS_AT",
+    "WORKS_AS": "WORKS_AT",
+    "DISCUSS": "DISCUSSES",
+    "CONTACTED": "SENT_TO",
+    "CONTACTS": "SENT_TO",
+    "COMMUNICATES_WITH": "SENT_TO",
+    "ADDRESSED_TO": "SENT_TO",
+    "REQUESTED": "DISCUSSES",
+    "REQUESTS": "DISCUSSES",
+    "VISITED": "ATTENDED",
+    "VISITS": "ATTENDED",
+    "VISIT": "ATTENDED",
+    "POSSIBLE_VISIT": "ATTENDED",
+    "PLANS_TO_VISIT": "ATTENDED",
+    "VISITING": "ATTENDED",
+    "INVITED": "ATTENDED",
+    "INVITED_BY": "ATTENDED",
+    "TRAVEL_TO": "ATTENDED",
+    "TRAVEL_FROM": "ATTENDED",
+    "TRAVELING": "ATTENDED",
+    "TRAVELS_TO": "ATTENDED",
+    "TRAVELS_WITH": "ATTENDED",
+    "DEPARTURE_FROM": "ATTENDED",
+    "DEPARTURE_PLACE": "ATTENDED",
+    "DEPARTURE": "ATTENDED",
+    "DESTINATION": "ATTENDED",
+    "DESTINATION_TO": "ATTENDED",
+    "ARRIVES_AT": "ATTENDED",
+    "ARRIVAL_TO": "ATTENDED",
+    "ARRIVAL_AT": "ATTENDED",
+    "ARRIVAL_PLACE": "ATTENDED",
+    "DEPARTS_FROM": "ATTENDED",
+    "FLIES_TO": "ATTENDED",
+    "FLIES_FROM": "ATTENDED",
+    "FLIGHT": "ATTENDED",
+    "BOOKED_BY": "ATTENDED",
+    "BOOKED_FOR": "ATTENDED",
+    "LAYOVER_IN": "ATTENDED",
+    "OPERATED_BY": "RESPONSIBLE_FOR",
+    "SUPERVISES": "RESPONSIBLE_FOR",
+    "COORDINATES": "RESPONSIBLE_FOR",
+    "COORDINATES_WITH": "RESPONSIBLE_FOR",
+    "COORDINATED_BY": "RESPONSIBLE_FOR",
+    "HEAD_OF": "RESPONSIBLE_FOR",
+    "CONTACT_PERSON": "RESPONSIBLE_FOR",
+    "APPROVED": "RESPONSIBLE_FOR",
+    "APPROVED_BY": "RESPONSIBLE_FOR",
+    "DESIGNED": "AUTHORED",
+    "DESIGNED_BY": "AUTHORED",
+    "PREPARED_BY": "AUTHORED",
+    "DOCUMENTED_IN": "AUTHORED",
+    "DESCRIBES": "DISCUSSES",
+    "TESTED": "USES",
+    "TESTED_BY": "USES",
+    "TESTED_IN": "USES",
+    "ANALYZED_BY": "USES",
+    "ANALYZED": "USES",
+    "ANALYZES": "USES",
+    "MEASURED": "USES",
+    "MEASURES": "USES",
+    "SAMPLING": "USES",
+    "CALIBRATED_BY": "USES",
+    "STORED_IN": "LOCATED_IN",
+    "OPERATES_IN": "LOCATED_IN",
+    "OPERATES_AT": "LOCATED_IN",
+    "INSTALLED_IN": "LOCATED_IN",
+    "USES_FACILITY": "HAS_FACILITY",
+    "USES_EQUIPMENT": "HAS_EQUIPMENT",
+    "MADE_OF": "USES",
+    "USED_BY": "USES",
+    "USED_IN": "USES",
+    "USES_PRODUCT": "USES",
+    "USE_PROCESS": "USES_PROCESS",
+    "CERTIFIED_BY": "REGULATED_BY",
+    "CERTIFIED_TO": "REGULATED_BY",
+    "COMPLIES_WITH": "REGULATED_BY",
+    "COMPLIANT_WITH": "REGULATED_BY",
+    "CONFORMITY_WITH": "REGULATED_BY",
+    "ACCREDITED_BY": "REGULATED_BY",
+    "LICENSED_TO": "REGULATED_BY",
+    "LICENSED_AS": "REGULATED_BY",
+    "REGULATED_IN": "REGULATED_BY",
+    "OPERATES_ACCORDING_TO": "REGULATED_BY",
+    "RECOGNIZED_BY": "RELATED_TO",
+    "RECOGNIZED_FOR": "RELATED_TO",
+    "SUPPORTS": "RELATED_TO",
+    "COLLABORATING": "RELATED_TO",
+    "COLLABORATED_WITH": "RELATED_TO",
+    "COLLABORATES_WITH": "RELATED_TO",
+    "COOPERATES_WITH": "RELATED_TO",
+    "PARTNERSHIP": "RELATED_TO",
+    "HARMFUL_TO": "RELATED_TO",
+    "INCOMPATIBLE_WITH": "RELATED_TO",
+    "SENSITIVE_TO": "RELATED_TO",
+    "RESISTANT_TO": "RELATED_TO",
+    "COMPATIBLE_WITH": "RELATED_TO",
+    "DELIVERED_TO": "SUPPLIED_BY",
+    "TRANSPORTED_BY": "SUPPLIED_BY",
+    "ORDERED_FROM": "SUPPLIED_BY",
+    "ORDERED": "SUPPLIED_BY",
+    "ORDERED_BY": "SUPPLIED_BY",
+    "PURCHASED_BY": "SUPPLIED_BY",
+    "BUYING_FROM": "SUPPLIED_BY",
+    "REPLACED_BY": "REPLACED",
+    "REPAIRED_BY": "RESPONSIBLE_FOR",
+    "INVESTIGATED_BY": "RESPONSIBLE_FOR",
+    "INSPECTS": "RESPONSIBLE_FOR",
+    "TRAINING": "DISCUSSES",
+    "SHARED": "DISCUSSES",
+    "CONFIRMS": "DISCUSSES",
+    "CONFIRMED_BY": "DISCUSSES",
+    "PROPOSES": "DISCUSSES",
+    "PROPOSED_BY": "DISCUSSES",
+    "RECOMMENDS": "DISCUSSES",
+    "INDICATES": "DISCUSSES",
+    "INFORMS": "DISCUSSES",
+    "EVALUATED": "DISCUSSES",
+    "CITED_BY": "AUTHORED"
+  },
+  "relationship_direction_flips": {
+    "_comment": "When LLM outputs these types, flip source/target to normalize direction.",
+    "EMPLOYS": {
+      "standard": "WORKS_AT",
+      "_comment": "ORG employs PERSON -> PERSON WORKS_AT ORG"
+    },
+    "HIRES": {
+      "standard": "WORKS_AT",
+      "_comment": "ORG hires PERSON -> PERSON WORKS_AT ORG"
+    },
+    "CONTAINS": {
+      "standard": "PART_OF",
+      "_comment": "ORG contains DEPT -> DEPT PART_OF ORG"
+    },
+    "HOSTS": {
+      "standard": "LOCATED_IN",
+      "_comment": "GPE hosts ORG -> ORG LOCATED_IN GPE"
+    },
+    "SUPPLIES": {
+      "standard": "SUPPLIED_BY",
+      "_comment": "ORG supplies PRODUCT -> PRODUCT SUPPLIED_BY ORG"
+    },
+    "PRODUCES": {
+      "standard": "PRODUCED_BY",
+      "_comment": "ORG produces PRODUCT -> PRODUCT PRODUCED_BY ORG"
+    }
+  },
+  "relationship_types": {
+    "structural": {
+      "_comment": "Auto-generated edges from chunk/thread structure. Excluded from path finding.",
+      "types": [
+        "MENTIONED_IN",
+        "PARTICIPATED_IN",
+        "HAS_ATTACHMENT",
+        "PART_OF_THREAD"
+      ]
+    },
+    "semantic": {
+      "_comment": "Extracted from text. Used in path finding.",
+      "types": {
+        "WORKS_AT": {
+          "description": "person employed at organization",
+          "direction": "person → organization"
+        },
+        "WORKS_ON": {
+          "description": "person works on project/task/initiative",
+          "direction": "person → project"
+        },
+        "REPORTS_TO": {
+          "description": "person reports to another person",
+          "direction": "subordinate → manager"
+        },
+        "RESPONSIBLE_FOR": {
+          "description": "person/org manages or oversees something",
+          "direction": "manager → thing managed"
+        },
+        "USES": {
+          "description": "entity uses a product/technology/tool",
+          "direction": "user → product"
+        },
+        "USES_PROCESS": {
+          "description": "facility/org uses a process or workflow",
+          "direction": "facility → process"
+        },
+        "PART_OF": {
+          "description": "entity is part of a larger entity",
+          "direction": "child → parent"
+        },
+        "HAS_FACILITY": {
+          "description": "organization/location has a facility or site",
+          "direction": "organization → facility"
+        },
+        "HAS_EQUIPMENT": {
+          "description": "facility has equipment or machines",
+          "direction": "facility → equipment"
+        },
+        "AUTHORED": {
+          "description": "person created/wrote a document",
+          "direction": "person → document"
+        },
+        "ATTENDED": {
+          "description": "person attended an event/meeting",
+          "direction": "person → event"
+        },
+        "LOCATED_IN": {
+          "description": "entity is in a location",
+          "direction": "entity → location"
+        },
+        "SENT_TO": {
+          "description": "person communicated with another person",
+          "direction": "sender → recipient"
+        },
+        "DISCUSSES": {
+          "description": "person/email discusses a topic, product, or process",
+          "direction": "person → topic"
+        },
+        "SUPPLIED_BY": {
+          "description": "product is supplied by an organization",
+          "direction": "product → supplier"
+        },
+        "PRODUCED_BY": {
+          "description": "product is produced by an organization",
+          "direction": "product → producer"
+        },
+        "REPLACED": {
+          "description": "new product/process replaced an old one",
+          "direction": "new → old"
+        },
+        "RELATED_TO": {
+          "description": "general relationship (use only when no specific type fits)",
+          "direction": "entity → entity"
+        }
+      }
+    },
+    "prioritized": {
+      "_comment": "Semantic edges that get weight boost in path finding.",
+      "types": [
+        "SENT_BY",
+        "WORKS_ON",
+        "DISCUSSES",
+        "HAS_ATTACHMENT",
+        "CONTAINS"
+      ]
+    }
+  },
+  "internal_node_types": [
+    "CHUNK",
+    "THREAD",
+    "EMAIL"
+  ],
+  "entity_name_aliases": {
+    "_comment": "Map known name variants to a canonical name. Applied during graph building. Case-insensitive. Replace these examples with aliases for your own corpus.",
+    "Acme Corporation": "Acme",
+    "ACME Corp.": "Acme",
+    "Acme Inc.": "Acme",
+    "acme.example.com": "Acme",
+    "Acme Research Centre": "ARC",
+    "Acme R&D Centre": "ARC",
+    "Acme Lisbon Office": "Acme Lisbon",
+    "Acme Berlin Office": "Acme Berlin"
+  }
+}
